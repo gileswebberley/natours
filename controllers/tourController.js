@@ -1,6 +1,5 @@
+import fs from 'fs'; //this needs to be the first line for eslint airbnb plugin
 import { __dirname, __filename } from '../utils/pathHackForModules.js'; //remember these are properties of the node.js wrapper function when using commonJS modules (ie require()) so we do not have access to them when we are using ES modules (import/export) so we have to create our own (see the utils file for how we do this)
-
-import fs from 'fs';
 
 const tours = JSON.parse(
   fs.readFileSync(`${__dirname}/../dev-data/data/tours-simple.json`),
@@ -52,6 +51,7 @@ export const createTour = (req, res) => {
   fs.writeFile(
     `${__dirname}/dev-data/data/tours-simple.json`,
     JSON.stringify(tours),
+    'utf-8',
     (err) => {
       //I'm not sure why but this throws an error every time even though the new tour is created
       //   if (err) {
