@@ -1,4 +1,4 @@
-import { __dirname, __filename } from '../utils/pathHackForModules.js';
+import { __dirname, __filename } from '../utils/pathHackForModules.js'; //remember these are properties of the node.js wrapper function when using commonJS modules (ie require()) so we do not have access to them when we are using ES modules (import/export) so we have to create our own (see the utils file for how we do this)
 
 import fs from 'fs';
 
@@ -24,6 +24,7 @@ export const checkID = (req, res, next, val) => {
 
 //our validation middleware for post requests (see the post route for usage)
 export const checkBody = (req, res, next) => {
+  //remember that this only works because we are using use(express.json()) in our app.js file to parse the body of the request and make it available as req.body
   if (!req.body.price || !req.body.name) {
     return res.status(400).json({
       status: 'fail',

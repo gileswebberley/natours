@@ -7,8 +7,8 @@
   "type": "module",
   "main": "app.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js",
+    "production": "node server.js",
+    "dev": "node --env-file=.env.development --watch server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
