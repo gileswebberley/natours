@@ -7,7 +7,7 @@ console.log('Node has set the environment variables: ', process.env);
 // in the course they use the dotenv package but this is no longer needed in Node 20+ as we can use the built in support by using the --env-file flag when we start the server. We can also use the --watch flag which allows for us to get rid of our nodemon dependency as well. See the dev script in package.json for how I'll use those flags.
 
 // next create our port number as a varaible so we can find and change it later - We have now set this in our .env file
-const port = process.env.PORT; //this means that if we have a PORT env variable set (eg in production) then we will use that, otherwise we will use 3000 as the default port for development
+const port = process.env.PORT; //this means that if we have a PORT env variable set (eg in .env.production) then we will use that, otherwise we will use 3000 as the default port for development
 // now we can start our server listening to the port we defined above. The callback function will execute when the server starts
 app.listen(port, () => {
   console.log(`App running on port ${port}...`);
