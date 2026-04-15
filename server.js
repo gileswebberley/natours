@@ -1,4 +1,17 @@
+import mongoose from 'mongoose';
 import { app } from './app.js';
+
+//Now we're goimng to try to connect to the mongoDB database that we just created
+const DB = process.env.DATABASE_URI.replace(
+  '<PASSWORD>',
+  process.env.DATABASE_PASSWORD,
+);
+mongoose
+  .connect(DB)
+  .then((connection) =>
+    console.log('Connected to MongoDB', connection.connections),
+  )
+  .catch((err) => console.error('Error connecting to MongoDB:', err));
 
 //Express sets the env varaible to 'development' by default when we run the server with nodemon, but if we were to run it with node it would be set to 'production' by default. We can also set it ourselves to whatever we want by setting the env variable in our terminal before running the server (eg export NODE_ENV=development on mac or set NODE_ENV=development on windows). This is really useful because we can have different settings for development and production (eg different database connection strings, different logging levels, etc) and we can use this env variable to determine which settings to use.
 console.log('the env variable is set to: ', app.get('env'));

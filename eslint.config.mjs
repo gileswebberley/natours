@@ -53,6 +53,7 @@ export default defineConfig([
 
       // 3. Allow named exports even if there is only one
       'import/prefer-default-export': 'off',
+      'import/no-extraneous-dependencies': 'off',
       'spaced-comment': 'off',
       'no-console': 'off',
       'consistent-return': 'off',
