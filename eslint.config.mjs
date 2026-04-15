@@ -17,7 +17,7 @@ const compat = new FlatCompat({
 
 export default defineConfig([
   {
-    files: ['**/*.{js,mjs,cjs,jsx}'],
+    files: ['**/*.{js,jsx}'],
 
     // 2. Set up the environment (Node and Browser)
     languageOptions: {
@@ -64,6 +64,7 @@ export default defineConfig([
       'no-else-return': 'off',
       'no-underscore-dangle': 'off',
       'class-methods-use-this': 'off',
+      'prefer-object-spread': 'off',
 
       'prefer-destructuring': [
         'error',
