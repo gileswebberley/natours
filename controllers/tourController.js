@@ -1,5 +1,10 @@
 import fs from 'fs'; //this needs to be the first line for eslint airbnb plugin
-import { __dirname, __filename } from '../utils/pathHackForModules.js'; //remember these are properties of the node.js wrapper function when using commonJS modules (ie require()) so we do not have access to them when we are using ES modules (import/export) so we have to create our own (see the utils file for how we do this)
+import path from 'path';
+import { fileURLToPath } from 'url';
+//remember these are properties of the node.js wrapper function when using commonJS modules (ie require()) so we do not have access to them when we are using ES modules (import/export) so we have to create our own
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+// import { __dirname, __filename } from '../utils/pathHackForModules.js'; //This does not work, see the file for a comment about why
 
 const tours = JSON.parse(
   fs.readFileSync(`${__dirname}/../dev-data/data/tours-simple.json`),
@@ -46,20 +51,21 @@ export const getAllTours = (req, res) => {
 
 export const createTour = (req, res) => {
   const newId = tours[tours.length - 1].id + 1;
-  const newTour = Object.assign({ id: newId }, req.body);
+  const newTour = { ...req.body, id: newId }; //old way of doing the same thing Object.assign({ id: newId }, req.body);
   tours.push(newTour);
   fs.writeFile(
-    `${__dirname}/dev-data/data/tours-simple.json`,
+    `${__dirname}/../dev-data/data/tours-simple.json`,
     JSON.stringify(tours),
     'utf-8',
     (err) => {
       //I'm not sure why but this throws an error every time even though the new tour is created
-      //   if (err) {
-      //     res.status(500).json({
-      //       status: 'error',
-      //       message: 'Could not save the new tour',
-      //     });
-      //   }
+      if (err) {
+        console.log('err occured whilst creating a new tour: ', err);
+        res.status(500).json({
+          status: 'error',
+          message: 'Could not save the new tour',
+        });
+      }
       res.status(201).json({
         status: 'success',
         data: {

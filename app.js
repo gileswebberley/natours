@@ -1,6 +1,10 @@
 import express from 'express';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { router as tourRouter } from './routes/tourRoutes.js';
-import { __dirname, __filename } from './utils/pathHackForModules.js';
+//remember these are properties of the node.js wrapper function when using commonJS modules (ie require()) so we do not have access to them when we are using ES modules (import/export) so we have to create our own
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 //export app for server.js to use
 export const app = express();
