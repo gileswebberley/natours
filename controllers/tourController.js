@@ -1,15 +1,5 @@
-//our validation middleware for post requests (see the post route for usage)
-export const checkBody = (req, res, next) => {
-  //remember that this only works because we are using use(express.json()) in our app.js file to parse the body of the request and make it available as req.body
-  if (!req.body.price || !req.body.name) {
-    return res.status(400).json({
-      status: 'fail',
-      message: 'Missing name or price',
-    });
-  }
-  console.log('body of POST request checked and has price and name');
-  next();
-};
+//Now that we are developing Models with Mongoose we will import our first one here
+import Tour from '../models/tourModel.js';
 
 export const getAllTours = (req, res) => {
   res.status(200).json({
@@ -21,13 +11,23 @@ export const getAllTours = (req, res) => {
   });
 };
 
-export const createTour = (req, res) => {
-  res.status(201).json({
-    status: 'success',
-    // data: {
-    //   tour: newTour,
-    // },
-  });
+export const createTour = async (req, res) => {
+  //rather than create an instance of the Tour model and then execute it's save method we can just use what can be thought of as a static method on the Tour model itself which is called create(). This too returns a promise so we'll make these controller functions async
+  try {
+    const newTour = await Tour.create(req.body);
+
+    res.status(201).json({
+      status: 'success',
+      data: {
+        tour: newTour,
+      },
+    });
+  } catch (err) {
+    res.status(400).json({
+      status: 'fail',
+      message: err.message,
+    });
+  }
 };
 
 export const getTourById = (req, res) => {

@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 
-//Let's create our first mongoose schema
+// Any data sent as a Tour that is not in this schema will be ignored and not saved to the database
 const tourSchema = new mongoose.Schema({
   name: {
     type: String,
