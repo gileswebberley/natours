@@ -66,6 +66,7 @@ export default defineConfig([
       'no-underscore-dangle': 'off',
       'class-methods-use-this': 'off',
       'prefer-object-spread': 'off',
+      'prefer-const': 'warn',
 
       'prefer-destructuring': [
         'error',
