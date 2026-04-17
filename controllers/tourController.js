@@ -38,28 +38,71 @@ export const createTour = async (req, res) => {
   }
 };
 
-export const getTourById = (req, res) => {
-  //because it is now going through the checkID param middleware it will only get here if the id is valid and will have been added to the request object as req.tour
-  res.status(200).json({
-    status: 'success',
-    data: {
-      tour: req.thisTour,
-    },
-  });
+export const getTourById = async (req, res) => {
+  try {
+    const thisTour = await Tour.findById(req.params.id);
+    //another way to do this would be to use the findOne() method and pass it a filter object to compare the auto produced _id field with the params id like so Tour.findOne({_id: req.params.id})
+    res.status(200).json({
+      status: 'success',
+      data: {
+        tour: thisTour,
+      },
+    });
+  } catch (err) {
+    res.status(400).json({
+      status: 'fail',
+      message: err,
+    });
+  }
 };
 
-export const updateTour = (req, res) => {
-  res.status(200).json({
-    status: 'success',
-    data: {
-      tour: '<Updated tour here...>',
-    },
-  });
+export const updateTour = async (req, res) => {
+  try {
+    // notice the options object which in this case means that the updated tour is returned by the promise, and also that it runs all the schema validations on the updating data (which is strangely not the default behaviour)
+    const tour = await Tour.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true,
+    });
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        tour,
+      },
+    });
+  } catch (err) {
+    res.status(400).json({
+      status: 'fail',
+      message: err,
+    });
+  }
 };
 
-export const deleteTour = (req, res) => {
-  res.status(204).json({
-    status: 'success',
-    data: null,
-  });
+// Notice how throughout all these controllers we prefer an early return to an else statement
+export const deleteTour = async (req, res) => {
+  try {
+    const tour = await Tour.findByIdAndDelete(req.params.id);
+    // will return null if the document is not found rather than throw an error so check that here
+    if (!tour) {
+      return res.status(404).json({
+        staus: 'fail',
+        message: `No tour found to be deleted with id: ${req.params.id}`,
+      });
+    }
+    // 204 denotes a 'no content' response which is standard for deletion and so does not send any data back in the response body
+    res.status(204).send();
+  } catch (err) {
+    // here we'll check the type of error thrown as if it's a Cast error then we know that the id provided was not of the correct ObjectId format
+    if (err.name === 'CastError') {
+      return res.status(400).json({
+        status: 'fail',
+        message: `Invalid id format: ${req.params.id}`,
+      });
+    }
+    //otherwise it's just some generic failure with the server or db (500 - internal server error)
+    res.status(500).json({
+      status: 'fail',
+      message: err,
+    });
+  }
 };
