@@ -2,9 +2,16 @@ import Tour from '../models/tourModel.js';
 
 export const getAllTours = async (req, res) => {
   try {
-    const filteredQuery = { ...req.query };
+    let filteredQuery = { ...req.query };
     const excludedFields = ['page', 'sort', 'limit', 'fields'];
     excludedFields.forEach((el) => delete filteredQuery[el]);
+    //Advanced filtering (gt, gte, lt, lte)
+    // we use a regEx to find these operators and replace them with the mongoose version (ie with a $ at the beginning)
+    let queryStr = JSON.stringify(filteredQuery);
+    queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`); // the \b denotes an exact match and the /g at the end denotes that we want to replace all instances rather than just the first which it would do without it
+    filteredQuery = JSON.parse(queryStr);
+    console.log(filteredQuery);
+
     let query = Tour.find(filteredQuery);
     const tours = await query;
     if (tours.length === 0) {

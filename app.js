@@ -9,6 +9,9 @@ const __dirname = path.dirname(__filename);
 //export app for server.js to use
 export const app = express();
 
+// for parsing queries with for example duration[gte]=5 we need to set the extended option to true, unlike in the course where it worked out of the box
+app.set('query parser', 'extended');
+
 // middleware
 //first we add this so that our controllers can access the body of a request as req.body (as seen in checkBody in the tourControllers file)
 app.use(express.json());
