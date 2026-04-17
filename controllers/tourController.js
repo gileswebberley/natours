@@ -4,6 +4,9 @@ import Tour from '../models/tourModel.js';
 export const getAllTours = async (req, res) => {
   try {
     const tours = await Tour.find();
+    if (tours.length === 0) {
+      throw new Error('No tours found');
+    }
     res.status(200).json({
       status: 'success',
       results: tours.length,
@@ -14,7 +17,7 @@ export const getAllTours = async (req, res) => {
   } catch (err) {
     res.status(404).json({
       status: 'fail',
-      message: err,
+      message: err.message,
     });
   }
 };
