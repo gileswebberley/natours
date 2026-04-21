@@ -67,6 +67,7 @@ export default defineConfig([
       'class-methods-use-this': 'off',
       'prefer-object-spread': 'off',
       'prefer-const': 'warn',
+      'lines-between-class-members': 'off',
 
       'prefer-destructuring': [
         'error',

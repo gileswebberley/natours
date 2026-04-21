@@ -1,4 +1,5 @@
 import Tour from '../models/tourModel.js';
+import APIFeatures from '../utils/apiFeatures.js';
 
 //middleware for our first alias route (see tourRoutes as well)
 export const aliasTopTours = (req, res, next) => {
@@ -15,52 +16,16 @@ export const getAllTours = async (req, res) => {
   try {
     //check if we have been through an alias route and change all references to req.query to this variable instead
     const queryParams = req.aliasQuery || req.query;
-    console.log(JSON.stringify(queryParams));
-    // we want to filter out the non filtering query parameters so we make a copy and delete the unwanted
-    let filteredQuery = { ...queryParams };
-    const excludedFields = ['page', 'sort', 'limit', 'fields'];
-    excludedFields.forEach((el) => delete filteredQuery[el]);
-    //Advanced filtering (gt, gte, lt, lte)
-    let queryStr = JSON.stringify(filteredQuery);
-    queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
-    filteredQuery = JSON.parse(queryStr);
 
-    let query = Tour.find(filteredQuery);
-
-    // Sorting
-    if (queryParams.sort) {
-      const sortBy = queryParams.sort.split(',').join(' ');
-      query = query.sort(sortBy);
-    } else {
-      //set a default sort method - newest first
-      query = query.sort('-createdAt');
-    }
-
-    // Field limiting (called Projecting)
-    if (queryParams.fields) {
-      const projectBy = queryParams.fields.split(',').join(' ');
-      query = query.select(projectBy);
-    } else {
-      // as default we will remove the __v field, we can also exclude fields in the schema
-      query = query.select('-__v');
-    }
-
-    // Pagination
-    const page = +queryParams.page || 1; //if no page is set in the query we'll default to 1
-    const limit = +queryParams.limit || 100; //if no limit is set in the query we'll default to 100
-    const pageSkipper = (page - 1) * limit; //ie limit = 10 so page 1 = results 0-10, page 2 = 11-20 etc
-    //Now if the page is set in the query string but it asks for 'out-of-bounds' results we'll throw an error
-    if (queryParams.page) {
-      //use the handy mongoose function to discover how many are in the collection
-      const numTours = await Tour.countDocuments();
-      if (pageSkipper >= numTours)
-        throw new Error(`Page ${queryParams.page} does not exist`);
-    }
-    // if we're all good we'll add the functionality to the query object
-    query = query.skip(pageSkipper).limit(limit);
+    //use our new features class
+    const features = new APIFeatures(Tour, queryParams)
+      .filter()
+      .sort()
+      .limitFields()
+      .paginate();
 
     // now we can finally execute our query
-    const tours = await query;
+    const tours = await features.query;
 
     if (tours.length === 0) {
       throw new Error('No tours found');
