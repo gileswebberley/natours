@@ -68,6 +68,7 @@ export default defineConfig([
       'prefer-object-spread': 'off',
       'prefer-const': 'warn',
       'lines-between-class-members': 'off',
+      'prefer-arrow-callback': 'off',
 
       'prefer-destructuring': [
         'error',
