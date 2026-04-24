@@ -15,6 +15,16 @@ mongoose
 
 // next create our port number as a varaible so we can find and change it later - We have now set this in our .env files
 const port = process.env.PORT;
-app.listen(port, () => {
+const server = app.listen(port, () => {
   console.log(`App running on port ${port}...`);
+});
+
+//this is now even more important as node will immediately crash if there's an unhandled exception, this allows us to close gracefully. Remember that process.on() is the way to deal with events in Node.js
+process.on('unhandledRejection', (err) => {
+  console.error(`UNHANDLED REJECTION: ${err.name} - ${err.message}`);
+  //close down the server first
+  server.close(() => {
+    //then kill the process
+    process.exit(1);
+  });
 });

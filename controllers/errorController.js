@@ -31,7 +31,7 @@ Mongoose (and standard JavaScript Error objects) typically define properties lik
 //we get an object with each validation error as a property of errors
 function handleValidationErrorDB(err) {
   const errors = Object.values(err.errors).map((e) => e.message);
-  const message = `Invalid input data: ${errors.join(' : ')}`;
+  const message = `Invalid input data: ${errors.join(' and ')}`;
   return new AppError(message, 400);
 }
 
@@ -50,6 +50,7 @@ function handleDuplicateErrorDB(err) {
   //409 is the correct status code for duplicate resource or resource already exists
   return new AppError(message, 409);
 }
+
 //remember that function declarations are hoisted with the declaration body, unlike function expressions and arrow functions
 function sendErrorDev(err, res) {
   //in dev so give all of the details for tracing the errors
