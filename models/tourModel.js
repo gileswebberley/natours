@@ -105,13 +105,14 @@ tourSchema.pre('save', function () {
 tourSchema.pre(/^find/, function () {
   this.find({ secretTour: { $ne: true } });
   this.start = Date.now();
-  console.log(`start query time: ${this.start}`);
+  //   console.log(`start query time: ${this.start}`);
 });
 
-//In the post-query hook we have access to all of the documents that have been returned by the query
+//In the post-query hook we have access to all of the documents that have been returned by the query - just a little lesson learnt - I implemented the next(new AppError) replacement for try-catch in getTourById and even when I was throwing an error this still ran and caused an error to be thrown so had to add optional chaining to docs.length to stop it from checking a null object for it's length property.
 tourSchema.post(/^find/, function (docs) {
+  const numDocs = docs === null ? 0 : docs?.length || 1;
   console.log(
-    `The query took ${Date.now() - this.start} milliseconds to retrieve ${docs.length} documents`,
+    `The query took ${Date.now() - this.start} milliseconds to retrieve ${numDocs} documents`,
   );
 });
 
