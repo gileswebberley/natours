@@ -14,7 +14,7 @@ export const aliasTopTours = (req, res, next) => {
   next();
 };
 
-export const getAllTours = async (req, res, next) => {
+export const getAllTours = async (req, res) => {
   //check if we have been through an alias route and change all references to req.query to this variable instead
   const queryParams = req.aliasQuery || req.query;
 
@@ -27,10 +27,10 @@ export const getAllTours = async (req, res, next) => {
 
   // now we can finally execute our query
   const tours = await features.query;
-
-  if (tours.length === 0) {
-    return next(new AppError('No tours found', 404));
-  }
+  //Not really an error so just return no results
+  // if (tours.length === 0) {
+  //   return next(new AppError('No tours found', 404));
+  // }
   res.status(200).json({
     status: 'success',
     results: tours.length,
@@ -42,7 +42,7 @@ export const getAllTours = async (req, res, next) => {
 
 export const createTour = async (req, res) => {
   const newTour = await Tour.create(req.body);
-  //as an example of not returning next(err) but throwing the error instead - both work
+  //as an example of not returning next(err) but throwing the error instead - both work, just don't add the next argument otherwise it expects you to use it manually
   if (!newTour) throw new AppError('Failed to create new tour', 400);
 
   res.status(201).json({

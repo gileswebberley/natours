@@ -69,6 +69,7 @@ export default defineConfig([
       'prefer-const': 'warn',
       'lines-between-class-members': 'off',
       'prefer-arrow-callback': 'off',
+      'no-use-before-define': ['error', { functions: false }],
 
       'prefer-destructuring': [
         'error',
