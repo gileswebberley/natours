@@ -18,7 +18,8 @@
     "express": "^5.2.1",
     "mongodb": "^7.1.1",
     "mongoose": "^9.4.1",
-    "slugify": "^1.6.9"
+    "slugify": "^1.6.9",
+    "validator": "^13.15.35"
   },
   "devDependencies": {
     "@eslint/compat": "^2.0.5",
