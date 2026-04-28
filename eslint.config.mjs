@@ -21,16 +21,16 @@ export default defineConfig([
 
     // 2. Set up the environment (Node and Browser)
     languageOptions: {
+      ecmaVersion: 'latest',
+      sourceType: 'module',
       globals: {
         ...globals.node,
         ...globals.browser,
       },
-      ecmaVersion: 'latest',
-      sourceType: 'module',
     },
     extends: [
       ...fixupConfigRules(
-        compat.extends('airbnb', 'prettier', 'plugin:node/recommended'),
+        compat.extends('airbnb', 'prettier', 'plugin:n/recommended'),
       ),
     ],
 
@@ -70,6 +70,7 @@ export default defineConfig([
       'lines-between-class-members': 'off',
       'prefer-arrow-callback': 'off',
       'no-use-before-define': ['error', { functions: false }],
+      'n/no-proccess-exit': 'warn',
 
       'prefer-destructuring': [
         'error',

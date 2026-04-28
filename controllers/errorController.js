@@ -43,7 +43,7 @@ function handleCastErrorDB(err) {
 
 // the format of the error object for duplicate field errors has changed since the course and now has a property called keyValue and an index property that seems to relate to the position of this error within that keyValue object
 function handleDuplicateErrorDB(err) {
-  const keyVal = err['keyValue'];
+  const keyVal = err.keyValue; //['keyValue'];
   const keyValName = Object.keys(keyVal)[err.index];
   const keyValValue = Object.values(keyVal)[err.index];
   const message = `There is already a unique ${keyValName} with the value of ${keyValValue}, please use a different ${keyValName}`;
