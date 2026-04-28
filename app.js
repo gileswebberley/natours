@@ -2,6 +2,7 @@ import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { router as tourRouter } from './routes/tourRoutes.js';
+import { router as userRouter } from './routes/userRoutes.js';
 import AppError from './utils/appError.js';
 import globalErrorHandler from './controllers/errorController.js';
 //remember these are properties of the node.js wrapper function when using commonJS modules (ie require()) so we do not have access to them when we are using ES modules (import/export) so we have to create our own
@@ -27,6 +28,8 @@ app.use((req, res, next) => {
 });
 // 'mount' our tour router which is now in its own file (in the routes folder) and all of it's handlers (which are known as controllers in the MVC pattern) are in the controllers folder
 app.use('/api/v1/tours', tourRouter);
+// now add in our users route
+app.use('/api/v1/users', userRouter);
 
 app.all('/{*any}', (req, res, next) => {
   next(new AppError(`${req.originalUrl} cannot be found on this server`, 404));

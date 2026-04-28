@@ -14,18 +14,13 @@ const userSchema = new mongoose.Schema({
     lowercase: true,
     unique: true,
     trim: true,
-    validate: {
-      validator: [
-        validator.isEmail,
-        'The email address is not considered valid',
-      ],
-      //   function (val) {
-      //     const regexp =
-      //       /^[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/;
-      //     return regexp.test(val);
-      //   },
-      //   message: 'The email address is not considered valid',
-    },
+    validate: [validator.isEmail, 'The email address is not considered valid'],
+    //   function (val) {
+    //     const regexp =
+    //       /^[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/;
+    //     return regexp.test(val);
+    //   },
+    //   message: 'The email address is not considered valid',
   },
   photo: {
     type: String,
