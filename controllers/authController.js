@@ -1,4 +1,4 @@
-import { promisify } from 'utils';
+import { promisify } from 'node:util';
 import User from '../models/userModel.js';
 import jwt from 'jsonwebtoken';
 import AppError from '../utils/appError.js';
