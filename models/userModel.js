@@ -47,14 +47,19 @@ const userSchema = new mongoose.Schema({
       message: 'Your password does not match your password confirm',
     },
   },
+  //just for our final step in the protect middleware function
+  passwordChangedAt: Date,
 });
 
 userSchema.pre('save', async function () {
+  //first check to see if the password has been changed and if not simply early return
   if (!this.isModified('password')) return;
   //now we will hash the password with bcrypt - the 12 is the length of the random string used in hashing which is also refered to as the 'salt rounds'. Of course we are using the non sync method
   this.password = await bcrypt.hash(this.password, 12);
   //as this will execute after the validation we'll get rid of the confirmation - required just means it is required input
   this.passwordConfirm = undefined;
+  //take away a second to handle jwt syncronisation
+  if (!this.isNew) this.passwordChangedAt = Date.now() - 1000;
   //remember that we do not call next in the modern version of mongoose
   //   next();
 });
@@ -66,6 +71,21 @@ userSchema.methods.comparePassword = async function (
 ) {
   //because we have password select: false we cannot use this.password which is why userPassword must be sent in as an argument. Using the bcrypt package we can automagically check the non hashed candidatePassword against the hashed password stored in the DB
   return await bcrypt.compare(candidatePassword, userPassword);
+};
+
+//final check in the protect middleware
+userSchema.methods.changedPasswordAfterJwtIssue = function (JWTTimestamp) {
+  //the jwt timestamp is given in seconds whereas the mongoose uses the JS Date object
+  if (this.passwordChangedAt) {
+    //so the user has changed their password since this was a user document field
+    const dateTime = parseInt(this.passwordChangedAt.getTime() / 1000, 10);
+    // console.log(
+    //   `The passwordChangedAt is ${dateTime} and the jwt timestamp is ${JWTTimestamp}. timestamp is less than passwordChangedAt = ${JWTTimestamp < dateTime}`,
+    // );
+    return JWTTimestamp < dateTime;
+  }
+  //if we do not have a passwordChangedAt field we cannot check so return false - ie it hasn't changed
+  return false;
 };
 
 const User = mongoose.model('User', userSchema);

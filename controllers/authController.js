@@ -61,7 +61,7 @@ export const login = async (req, res) => {
   });
 };
 
-//we'll create a middleware function to protect routes by verifying the token. The standard way of doing this is to send a request header called authorization (American spelling) with a value of 'Bearer [token]'. Notice we are going to take manual control of the next function by having it as the 3rd arg
+//we'll create a middleware function to protect routes by verifying the token. The standard way of doing this is to send a request header called authorization (American spelling) with a value of 'Bearer [token]'. Notice we are going to take manual control of the next function by having it as the 3rd arg because this is middleware rather than a 'destination' controller that sends a response
 export const protect = async (req, res, next) => {
   let token;
   if (
@@ -81,4 +81,23 @@ export const protect = async (req, res, next) => {
   }
   //Now, as we are using the old but popular jsonwebtoken package rather than jose we need to use a node utility function so we can carry on working with Promises and the async/await
   const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
+
+  //We also want to check that the user still actually exists
+  const checkUser = await User.findById(decoded.id);
+  if (!checkUser) {
+    return next(new AppError('The token does not match a user', 401));
+  }
+
+  //and just in case a user has had to change their password since the token was issued we'll create a new instance method in the user model which we can call on the checkUser document returned above (iat is the property of the token payload and is Issued At Timestamp)
+  if (checkUser.changedPasswordAfterJwtIssue(decoded.iat)) {
+    return next(
+      new AppError(
+        'The user has recently changed their password, please log in again',
+        401,
+      ),
+    );
+  }
+  //mad eit through all of the checks so move along the pipeline
+  req.user = checkUser;
+  next();
 };
