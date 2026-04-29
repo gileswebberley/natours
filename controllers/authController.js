@@ -1,3 +1,4 @@
+import { promisify } from 'utils';
 import User from '../models/userModel.js';
 import jwt from 'jsonwebtoken';
 import AppError from '../utils/appError.js';
@@ -58,4 +59,26 @@ export const login = async (req, res) => {
     token,
     token_expires_in: process.env.JWT_EXPIRES_IN,
   });
+};
+
+//we'll create a middleware function to protect routes by verifying the token. The standard way of doing this is to send a request header called authorization (American spelling) with a value of 'Bearer [token]'. Notice we are going to take manual control of the next function by having it as the 3rd arg
+export const protect = async (req, res, next) => {
+  let token;
+  if (
+    req.headers.authorization &&
+    req.headers.authorization.startsWith('Bearer')
+  ) {
+    token = req.headers.authorization.split(' ')[1];
+  }
+
+  if (!token) {
+    return next(
+      new AppError(
+        'You are not currently logged in and you are trying to reach a protected route',
+        401,
+      ),
+    );
+  }
+  //Now, as we are using the old but popular jsonwebtoken package rather than jose we need to use a node utility function so we can carry on working with Promises and the async/await
+  const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
 };

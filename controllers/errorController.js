@@ -20,13 +20,29 @@ Mongoose (and standard JavaScript Error objects) typically define properties lik
     if (error.name === 'CastError') error = handleCastErrorDB(error);
     // for the underlying Mongo error thrown for duplicate fields it does not have a name so we check against the code property
     if (error.code === 11000) error = handleDuplicateErrorDB(error);
-
+    //if the validation on a model fails we get this error (remember duplication is not really a validation error)
     if (error.name === 'ValidationError')
       error = handleValidationErrorDB(error);
+    //Next we deal with a malformed JWT
+    if (error.name === 'JsonWebTokenError') error = handleJWTError(error);
+    //and this is quite self explanatory
+    if (error.name === 'TokenExpiredError')
+      error = handleJWTExpiredError(error);
 
     sendErrorProd(error, res);
   }
 };
+
+function handleJWTError(err) {
+  return new AppError('Please login to get a valid token', 401);
+}
+
+function handleJWTExpiredError(err) {
+  return new AppError(
+    'Your login token has expired, please log back in to get access',
+    401,
+  );
+}
 
 //we get an object with each validation error as a property of errors
 function handleValidationErrorDB(err) {
