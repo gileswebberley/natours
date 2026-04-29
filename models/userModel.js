@@ -32,7 +32,9 @@ const userSchema = new mongoose.Schema({
     minLength: 8,
     //just in case as bcrypt truncates anything longer than 72 chars
     maxLength: 72,
-    unique: true,
+    // unique: true,
+    //let's make sure that we don't share the password in our responses
+    select: false,
   },
   passwordConfirm: {
     type: String,
@@ -56,6 +58,15 @@ userSchema.pre('save', async function () {
   //remember that we do not call next in the modern version of mongoose
   //   next();
 });
+
+//for checking passwords we are going to create our first 'instance method'. These are available on the user documents and so the this keyword relates to the current document
+userSchema.methods.comparePassword = async function (
+  candidatePassword,
+  userPassword,
+) {
+  //because we have password select: false we cannot use this.password which is why userPassword must be sent in as an argument. Using the bcrypt package we can automagically check the non hashed candidatePassword against the hashed password stored in the DB
+  return await bcrypt.compare(candidatePassword, userPassword);
+};
 
 const User = mongoose.model('User', userSchema);
 export default User;
