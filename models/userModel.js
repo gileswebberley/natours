@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import validator from 'validator';
+import bcrypt from 'bcryptjs';
 
 //5 fields name, email, photo, password, passwordConfirm
 const userSchema = new mongoose.Schema({
@@ -29,18 +30,31 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Please provide a password of at least 8 characters'],
     minLength: 8,
+    //just in case as bcrypt truncates anything longer than 72 chars
+    maxLength: 72,
     unique: true,
   },
   passwordConfirm: {
     type: String,
     required: [true, 'Please provide a password confirmation'],
     validate: {
+      //Remember this keyword only works on save/create
       validator: function (val) {
         return val === this.password;
       },
       message: 'Your password does not match your password confirm',
     },
   },
+});
+
+userSchema.pre('save', async function () {
+  if (!this.isModified('password')) return;
+  //now we will hash the password with bcrypt - the 12 is the length of the random string used in hashing which is also refered to as the 'salt rounds'. Of course we are using the non sync method
+  this.password = await bcrypt.hash(this.password, 12);
+  //as this will execute after the validation we'll get rid of the confirmation - required just means it is required input
+  this.passwordConfirm = undefined;
+  //remember that we do not call next in the modern version of mongoose
+  //   next();
 });
 
 const User = mongoose.model('User', userSchema);
