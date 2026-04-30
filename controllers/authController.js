@@ -2,6 +2,7 @@ import { promisify } from 'node:util';
 import User from '../models/userModel.js';
 import jwt from 'jsonwebtoken';
 import AppError from '../utils/appError.js';
+import sendEmail from '../utils/email.js';
 
 //we'll make a little token generation utility function
 const signToken = (id) => {
@@ -115,4 +116,39 @@ export const restrictTo = (...roles) => {
     }
   };
   next();
+};
+
+//we will now add the functionality for a user forgetting their password. We'll create a temporary reset token inside an instance method of our user model to produce it, encrypt it, and save it to the user document on the database
+export const forgotPassword = async (req, res) => {
+  //first get our user based on the email they provide (to send the reset token to)
+  const user = await User.findOne({ email: req.body.email });
+  if (!user) {
+    throw new AppError(
+      'There is no user with the email address you provided',
+      404,
+    );
+  }
+  //now we'll use the instance method we created in the user model
+  const resetToken = user.createPasswordResetToken();
+  //because the instance method createPasswordResetToken has added some fields we need to save the user to the database again, but we don't want to go through all of the schema validation
+  await user.save({ validateBeforeSave: false });
+
+  //We have now set up our email sending function so we'll send a link to the reset route
+  const resetURL = `${req.protocol}://${req.get('host')}/api/v1/users/resetPassword/${resetToken}`;
+  const message = `Forgot your password? Submit a PATCH request with your new password and passwordConfirm in the body to: ${resetURL} \nPlease note that this link is only valid for 10 minutes \nIf you did not send this password reset request please ignore this email`;
+
+  await sendEmail({
+    email: user.email,
+    subject: 'Your password reset link',
+    message,
+  });
+  //finally finish the request-response cycle
+  res.status(200).json({
+    status: 'success',
+    message: 'Reset password token send by email',
+  });
+};
+
+export const resetPassword = async (req, res) => {
+  console.log('RESETTING PASSWORD');
 };
