@@ -1,6 +1,7 @@
 import { promisify } from 'node:util';
 import User from '../models/userModel.js';
 import jwt from 'jsonwebtoken';
+import ms from 'ms';
 import AppError from '../utils/appError.js';
 import sendEmail from '../utils/email.js';
 import { cryptoHash } from '../utils/utilFunctions.js';
@@ -9,6 +10,26 @@ import { cryptoHash } from '../utils/utilFunctions.js';
 const signToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES_IN,
+  });
+};
+
+const createAndSendToken = (user, statusCode, res) => {
+  const token = signToken(user._id);
+  //remove the password from the user document cos it's a security issue. It's not a query object so we can't use select() at this stage
+  //   user.select('-password');
+  const userObject = user.toObject();
+  delete userObject.password;
+  //convert the expiry into an actual timestamp, jsonwebtoken apparently uses a package called ms to parse these strings
+  const expiresMS = ms(process.env.JWT_EXPIRES_IN);
+  const expiresTimestamp = Date.now() + expiresMS;
+  //It doesn't in the course but should we not send the client the expires-in time too?
+  res.status(statusCode).json({
+    status: 'success',
+    token,
+    token_expires_at: expiresTimestamp,
+    data: {
+      user: userObject,
+    },
   });
 };
 
@@ -22,18 +43,8 @@ export const signup = async (req, res) => {
     password: req.body.password,
     passwordConfirm: req.body.passwordConfirm,
   });
-  //login user on signup using jsonwebtoken package - Jose is another option btw
-  const token = signToken(newUser._id);
 
-  //It doesn't in the course but should we not send the client the expires-in time too?
-  res.status(201).json({
-    status: 'success',
-    token,
-    token_expires_in: process.env.JWT_EXPIRES_IN,
-    data: {
-      user: newUser,
-    },
-  });
+  createAndSendToken(newUser, 201, res);
 };
 
 export const login = async (req, res) => {
@@ -52,15 +63,7 @@ export const login = async (req, res) => {
   //we could do if(!user || !(await user.comparePassword(password, user.password))) instead as if there was no user it would not try the second OR argument and so would not throw an error for password not being a property of user. I prefer it like this though because it is much clearer to me.
   if (!correct) throw new AppError('Incorrect email or password', 401);
 
-  //if all is good send back the token
-  const token = signToken(user._id);
-
-  //It doesn't in the course but should we not send the client the expires-in time too?
-  res.status(201).json({
-    status: 'success',
-    token,
-    token_expires_in: process.env.JWT_EXPIRES_IN,
-  });
+  createAndSendToken(user, 201, res);
 };
 
 //we'll create a middleware function to protect routes by verifying the token. The standard way of doing this is to send a request header called authorization (American spelling) with a value of 'Bearer [token]'. Notice we are going to take manual control of the next function by having it as the 3rd arg because this is middleware rather than a 'destination' controller that sends a response
@@ -181,13 +184,32 @@ export const resetPassword = async (req, res) => {
   //now save so that it goes through the validation and pre-save hook
   await user.save();
 
-  //finally return a new token so the user is logged in
-  const token = signToken(user._id);
+  createAndSendToken(user, 200, res);
+};
 
-  //It doesn't in the course but should we not send the client the expires-in time too?
-  res.status(201).json({
-    status: 'success',
-    token,
-    token_expires_in: process.env.JWT_EXPIRES_IN,
-  });
+//allow a logged in user to change their password by entering their existing password and their new one
+//expects a body of 'password', 'newPassword', and 'newPasswordConfirm' and it should have been through the protect() middleware
+export const updatePassword = async (req, res) => {
+  //assume this is a protected route and so we should be able to get our token from the headers - NO NEED remember that protect() adds the current user to the request object
+  //   const token = req.headers.authorization.split(' ')[1];
+  //   const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
+  //   const user = await User.findOne({ _id: decoded.id });
+  //don't forget to 'reselect' the password cos it's removed from results by default
+  const user = User.findById(req.user.id).select('+password');
+  if (!user) {
+    throw new AppError('Cannot find a user to update their password', 404);
+  }
+  if (await user.comparePassword(req.body.password, user.password)) {
+    user.password = req.body.newPassword;
+    user.passwordConfirm = req.body.newPasswordConfirm;
+    //as usual we are using the seperate save() method so that it passes through the pre-save hook and validation functions that rely on the this keyword
+    await user.save();
+
+    createAndSendToken(user, 200, res);
+  } else {
+    throw new AppError(
+      'The current password supplied was not correct for your user',
+      401,
+    );
+  }
 };

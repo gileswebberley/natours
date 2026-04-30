@@ -4,6 +4,8 @@ import {
   signup,
   forgotPassword,
   resetPassword,
+  updatePassword,
+  protect,
 } from '../controllers/authController.js';
 import { getAllUsers } from '../controllers/userController.js';
 
@@ -15,5 +17,6 @@ router.route('/signup').post(signup);
 router.route('/login').post(login);
 router.route('/forgotPassword').post(forgotPassword);
 router.route('/resetPassword/:token').patch(resetPassword);
+router.route('/updateMyPassword').patch(protect, updatePassword);
 
 router.route('/').get(getAllUsers);
