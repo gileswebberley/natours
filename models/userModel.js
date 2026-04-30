@@ -77,11 +77,9 @@ userSchema.methods.comparePassword = async function (
 userSchema.methods.changedPasswordAfterJwtIssue = function (JWTTimestamp) {
   //the jwt timestamp is given in seconds whereas the mongoose uses the JS Date object
   if (this.passwordChangedAt) {
-    //so the user has changed their password since this was a user document field
+    //so the user has changed their password since signing up
     const dateTime = parseInt(this.passwordChangedAt.getTime() / 1000, 10);
-    // console.log(
-    //   `The passwordChangedAt is ${dateTime} and the jwt timestamp is ${JWTTimestamp}. timestamp is less than passwordChangedAt = ${JWTTimestamp < dateTime}`,
-    // );
+
     return JWTTimestamp < dateTime;
   }
   //if we do not have a passwordChangedAt field we cannot check so return false - ie it hasn't changed
