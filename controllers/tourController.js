@@ -14,6 +14,7 @@ export const aliasTopTours = (req, res, next) => {
   next();
 };
 
+//No need to use next() in a 'destination controller' ie one that sends a response and therefore is at the end of a pipeline
 export const getAllTours = async (req, res) => {
   //check if we have been through an alias route and change all references to req.query to this variable instead
   const queryParams = req.aliasQuery || req.query;

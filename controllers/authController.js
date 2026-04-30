@@ -97,7 +97,22 @@ export const protect = async (req, res, next) => {
       ),
     );
   }
-  //mad eit through all of the checks so move along the pipeline
+  //made it through all of the checks so move along the pipeline and add this user to the request object for the next stage - we will use this in the roles manager function restrictTo()
   req.user = checkUser;
+  next();
+};
+
+// 403 - Forbidden btw
+//Roles manager - a nice use of a closure and the ...rest operator
+export const restrictTo = (...roles) => {
+  //now we return the middleware function itself
+  return (req, res, next) => {
+    //here we have access to the outer function's roles argument and we also have access to the user that protect() passed on to here on the req object
+    if (!req?.user?.role || !roles.includes(req.user.role)) {
+      return next(
+        new AppError('You do not have permission to perform this action', 403),
+      );
+    }
+  };
   next();
 };

@@ -26,6 +26,12 @@ const userSchema = new mongoose.Schema({
   photo: {
     type: String,
   },
+  //add in authorisation with the role field
+  role: {
+    type: String,
+    enum: ['user', 'guide', 'lead-guide', 'admin'],
+    default: 'user',
+  },
   password: {
     type: String,
     required: [true, 'Please provide a password of at least 8 characters'],
