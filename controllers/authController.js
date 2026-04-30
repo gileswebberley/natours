@@ -3,6 +3,7 @@ import User from '../models/userModel.js';
 import jwt from 'jsonwebtoken';
 import AppError from '../utils/appError.js';
 import sendEmail from '../utils/email.js';
+import { cryptoHash } from '../utils/utilFunctions.js';
 
 //we'll make a little token generation utility function
 const signToken = (id) => {
@@ -136,19 +137,57 @@ export const forgotPassword = async (req, res) => {
   //We have now set up our email sending function so we'll send a link to the reset route
   const resetURL = `${req.protocol}://${req.get('host')}/api/v1/users/resetPassword/${resetToken}`;
   const message = `Forgot your password? Submit a PATCH request with your new password and passwordConfirm in the body to: ${resetURL} \nPlease note that this link is only valid for 10 minutes \nIf you did not send this password reset request please ignore this email`;
-
-  await sendEmail({
-    email: user.email,
-    subject: 'Your password reset link',
-    message,
-  });
-  //finally finish the request-response cycle
-  res.status(200).json({
-    status: 'success',
-    message: 'Reset password token send by email',
-  });
+  //because there may be an error when trying to send an email it might throw an error and we will want to clean up the user so the token doesn't exist
+  try {
+    await sendEmail({
+      email: user.email,
+      subject: 'Your password reset link',
+      message,
+    });
+    //finally finish the request-response cycle
+    res.status(200).json({
+      status: 'success',
+      message: 'Reset password token send by email',
+    });
+  } catch (err) {
+    user.passwordResetToken = undefined;
+    user.passwordResetExpires = undefined;
+    user.save({ validateBeforeSave: false });
+    throw new AppError(
+      `There was an error sending the password reset email: ${err}`,
+      500,
+    );
+  }
 };
 
 export const resetPassword = async (req, res) => {
-  console.log('RESETTING PASSWORD');
+  //get user based on token, but remember the token on the db is encryted and the token in the param is not. Because we just used a fairly simple hashing we can simply hash this token and it will result in the same string as when we did it in userModel instance method
+  const hashedToken = cryptoHash(req.params.token);
+  const user = await User.findOne({
+    passwordResetToken: hashedToken,
+    passwordResetExpires: { $gt: Date.now() },
+  });
+  if (!user) {
+    throw new AppError(
+      'Could not find a user with the reset password token recieved or that token has expired',
+      400,
+    );
+  }
+  //save the new password - via the encryting pre-save hook in the user modal and remove the reset token so it can only be used once (even if it is still valid)
+  user.password = req.body.password;
+  user.passwordConfirm = req.body.passwordConfirm;
+  user.passwordResetToken = undefined;
+  user.passwordResetExpires = undefined;
+  //now save so that it goes through the validation and pre-save hook
+  await user.save();
+
+  //finally return a new token so the user is logged in
+  const token = signToken(user._id);
+
+  //It doesn't in the course but should we not send the client the expires-in time too?
+  res.status(201).json({
+    status: 'success',
+    token,
+    token_expires_in: process.env.JWT_EXPIRES_IN,
+  });
 };

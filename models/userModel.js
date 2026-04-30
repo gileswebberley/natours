@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import validator from 'validator';
 import bcrypt from 'bcryptjs';
 import crypto from 'node:crypto';
+import { cryptoHash } from '../utils/utilFunctions.js';
 
 //5 fields name, email, photo, password, passwordConfirm
 const userSchema = new mongoose.Schema({
@@ -69,8 +70,10 @@ userSchema.pre('save', async function () {
   this.password = await bcrypt.hash(this.password, 12);
   //as this will execute after the validation we'll get rid of the confirmation - required just means it is required input
   this.passwordConfirm = undefined;
-  //take away a second to handle jwt syncronisation
-  if (!this.isNew) this.passwordChangedAt = new Date(Date.now() - 1000);
+  //if this is a password reset ie it's not new (signing up) and it has PATCHed the password
+  if (!this.isNew && this.isModified('password'))
+    //take away a second to handle jwt syncronisation
+    this.passwordChangedAt = new Date(Date.now() - 1000);
   //remember that we do not call next in the modern version of mongoose
   //   next();
 });
@@ -102,10 +105,7 @@ userSchema.methods.createPasswordResetToken = function () {
   //create the token with the crypto library
   const resetToken = crypto.randomBytes(32).toString('hex');
   //now encrypt this before sending it to the database (should I be awaiting the digest cos it is documented as returning a promise :/)
-  this.passwordResetToken = crypto
-    .createHash('sha256')
-    .update(resetToken)
-    .digest('hex');
+  this.passwordResetToken = cryptoHash(resetToken);
 
   console.log('encryptedResetToken', this.passwordResetToken);
 

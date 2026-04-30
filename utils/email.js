@@ -1,6 +1,6 @@
 import nodemailer from 'nodemailer';
 
-export default sendEmail = async (options) => {
+const sendEmail = async (options) => {
   const transport = nodemailer.createTransport({
     host: process.env.MAILTRAP_HOST,
     port: process.env.MAILTRAP_PORT,
@@ -20,3 +20,4 @@ export default sendEmail = async (options) => {
   //if you don't add a callback function as the second argument then it returns a promise, async is good for node remember
   const info = await transport.sendMail(mailOptions);
 };
+export default sendEmail;
