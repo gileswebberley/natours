@@ -122,6 +122,8 @@ export const restrictTo = (...roles) => {
   next();
 };
 
+//[TODO] implement a secure route for changing user email to avoid hijacking
+
 //because we have learnt that it is bad to send errors from the forgotPassword function we want to mimic the time it would take to send an email (apparently this helps to stop an attacker from using 'Timing Attacks') - this is not the best approach but ok for now, this leaves the sockets open which uses up RAM on the server. Instead we should consider using background 'workers' - Agenda is a good choice when working with MongoDB and it avoids the need for Redis, which BullMQ requires
 const mimicEmailTimer = 800 + Math.random() * 700;
 const mimicWorkTime = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -138,19 +140,30 @@ export const forgotPassword = async (req, res) => {
     );
     //wait to mimic working
     await mimicWorkTime(mimicEmailTimer);
-  } else if (user.passwordResetExpires) {
-    const coolDown = 60 * 1000;
-    const timeSinceLastRequest =
-      Date.now() -
-      (user.passwordResetExpires - process.env.RESET_PASSWORD_EXPIRES_IN);
-    if (timeSinceLastRequest < coolDown) {
-      console.error(
-        'ERROR: password reset request too soon after initial request (<1min)',
-      );
-      //wait to mimic working
-      await mimicWorkTime(mimicEmailTimer);
-    }
   } else {
+    //check if the request is too soon after the initial request and send a response to break out of the function
+    if (user.passwordResetExpires) {
+      //NO you silly c***
+      const coolDown = 60 * 1000;
+      const timeSinceLastRequest =
+        Date.now() -
+        (user.passwordResetExpires -
+          Number(process.env.RESET_PASSWORD_EXPIRES_IN));
+      if (timeSinceLastRequest < coolDown) {
+        console.error(
+          'ERROR: password reset request too soon after initial request (<1min)',
+        );
+        //wait to mimic working
+        await mimicWorkTime(mimicEmailTimer);
+        //stop the rest of this method from executing - remember the return!!
+        return res.status(200).json({
+          status: 'success',
+          message:
+            'Reset password token sent by email if your account is valid',
+        });
+      }
+    }
+
     //now we'll use the instance method we created in the user model
     const resetToken = user.createPasswordResetToken();
     //because the instance method createPasswordResetToken has added some fields we need to save the user to the database again, but we don't want to go through all of the schema validation
@@ -161,14 +174,15 @@ export const forgotPassword = async (req, res) => {
     const message = `Forgot your password? Submit a PATCH request with your new password and passwordConfirm in the body to: ${resetURL} \nPlease note that this link is only valid for 10 minutes \nIf you did not send this password reset request please ignore this email`;
     //because there may be an error when trying to send an email it might throw an error and we will want to clean up the user so the token doesn't exist
     try {
+      console.log('sending reset email');
       await sendEmail({
         email: user.email,
         subject: 'Your password reset link',
         message,
       });
     } catch (err) {
-      user.passwordResetToken = undefined;
-      user.passwordResetExpires = undefined;
+      user.set('passwordResetToken', undefined, { strict: false });
+      user.set('passwordResetExpires', undefined, { strict: false });
       user.save({ validateBeforeSave: false });
       //for the improved security version of this we'll simply log any errors rather than throw them
       console.error(
@@ -196,9 +210,11 @@ export const resetPassword = async (req, res) => {
   //save the new password - via the encryting pre-save hook in the user modal and remove the reset token so it can only be used once (even if it is still valid)
   user.password = req.body.password;
   user.passwordConfirm = req.body.passwordConfirm;
-  user.passwordResetToken = undefined;
-  user.passwordResetExpires = undefined;
+  //somehow my passwordResetToken is still on my user documenent, and without an expiry time!! Use belt and braces aproach of using the set() method instead of simply = undefined
+  user.set('passwordResetToken', undefined, { strict: false });
+  user.set('passwordResetExpires', undefined, { strict: false });
   //now save so that it goes through the validation and pre-save hook
+  console.log('Reset password is saving');
   await user.save();
 
   createAndSendToken(user, 200, res);
@@ -208,9 +224,6 @@ export const resetPassword = async (req, res) => {
 //expects a body of 'password', 'newPassword', and 'newPasswordConfirm' and it should have been through the protect() middleware
 export const updatePassword = async (req, res) => {
   //assume this is a protected route and so we should be able to get our token from the headers - NO NEED remember that protect() adds the current user to the request object
-  //   const token = req.headers.authorization.split(' ')[1];
-  //   const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
-  //   const user = await User.findOne({ _id: decoded.id });
   //don't forget to 'reselect' the password cos it's removed from results by default
   const user = User.findById(req.user.id).select('+password');
   if (!user) {

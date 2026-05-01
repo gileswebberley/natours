@@ -116,6 +116,7 @@ tourSchema.post(/^find/, function (docs) {
   );
 });
 
+//add a stage to the aggregate function that hides secret tours from the pipeline
 tourSchema.pre('aggregate', function () {
   this.pipeline().unshift({ $match: { secretTour: { $ne: true } } });
 });

@@ -34,7 +34,6 @@ const userSchema = new mongoose.Schema({
     minLength: 8,
     //just in case as bcrypt truncates anything longer than 72 chars
     maxLength: 72,
-    // unique: true,
     //let's make sure that we don't share the password in our responses
     select: false,
   },
@@ -51,10 +50,17 @@ const userSchema = new mongoose.Schema({
   },
   //just for our final step in the protect middleware function
   passwordChangedAt: Date,
+  //for the forgot password functionality
   passwordResetToken: {
     type: String,
   },
   passwordResetExpires: Date,
+  //for delete user to not actually delete the user but instead hide it in find() queries (see the pre-query hook below)
+  active: {
+    type: Boolean,
+    select: false,
+    default: true,
+  },
 });
 
 userSchema.pre('save', async function () {
@@ -65,11 +71,16 @@ userSchema.pre('save', async function () {
   //as this will execute after the validation we'll get rid of the confirmation - required just means it is required input
   this.passwordConfirm = undefined;
   //if this is a password reset ie it's not new (signing up) and it has PATCHed the password
-  if (!this.isNew && this.isModified('password'))
+  if (!this.isNew && this.isModified('password')) {
     //take away a second to handle jwt syncronisation
     this.passwordChangedAt = new Date(Date.now() - 1000);
+  }
   //remember that we do not call next in the modern version of mongoose
   //   next();
+});
+
+userSchema.pre(/^find/, function () {
+  this.find({ active: { $ne: false } });
 });
 
 //for checking passwords we are going to create our first 'instance method'. These are available on the user documents and so the this keyword relates to the current document
@@ -104,7 +115,7 @@ userSchema.methods.createPasswordResetToken = function () {
   console.log('encryptedResetToken', this.passwordResetToken);
   //we'll check against this to avoid reset being hammered
   this.passwordResetExpires = new Date(
-    Date.now() + process.env.RESET_PASSWORD_EXPIRES_IN,
+    Date.now() + Number(process.env.RESET_PASSWORD_EXPIRES_IN),
   ); //10mins
 
   return resetToken;

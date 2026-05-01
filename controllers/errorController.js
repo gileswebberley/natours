@@ -1,7 +1,7 @@
 import AppError from '../utils/appError.js';
 
 export default (err, req, res, next) => {
-  //By specifying four params Express knows it's an error handling middleware
+  //By specifying four params Express knows it's an error handling middleware - see app.js for how to 'mount' this, essentially at the bottom we have app.use(globalErrorHandler) which is the name this is imported as
   err.statusCode = err.statusCode || 500;
   err.status = err.status || 'error';
 
