@@ -18,17 +18,11 @@ const userSchema = new mongoose.Schema({
     unique: true,
     trim: true,
     validate: [validator.isEmail, 'The email address is not considered valid'],
-    //   function (val) {
-    //     const regexp =
-    //       /^[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/;
-    //     return regexp.test(val);
-    //   },
-    //   message: 'The email address is not considered valid',
   },
   photo: {
     type: String,
   },
-  //add in authorisation with the role field
+  //add in authorisation with the role field - this should be done manually, at least for the first admin
   role: {
     type: String,
     enum: ['user', 'guide', 'lead-guide', 'admin'],
@@ -108,8 +102,10 @@ userSchema.methods.createPasswordResetToken = function () {
   this.passwordResetToken = cryptoHash(resetToken);
 
   console.log('encryptedResetToken', this.passwordResetToken);
-
-  this.passwordResetExpires = new Date(Date.now() + 10 * 60 * 1000); //10mins
+  //we'll check against this to avoid reset being hammered
+  this.passwordResetExpires = new Date(
+    Date.now() + process.env.RESET_PASSWORD_EXPIRES_IN,
+  ); //10mins
 
   return resetToken;
 };
