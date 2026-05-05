@@ -208,7 +208,7 @@ export const forgotPassword = async (req, res) => {
     } catch (err) {
       user.set('passwordResetToken', undefined, { strict: false });
       user.set('passwordResetExpires', undefined, { strict: false });
-      user.save({ validateBeforeSave: false });
+      await user.save({ validateBeforeSave: false });
       //for the improved security version of this we'll simply log any errors rather than throw them
       console.error(
         `There was an error sending the password reset email: ${err}`,
@@ -250,7 +250,7 @@ export const resetPassword = async (req, res) => {
 export const updateMyPassword = async (req, res) => {
   //assume this is a protected route and so we should be able to get our token from the headers - NO NEED remember that protect() adds the current user to the request object
   //don't forget to 'reselect' the password cos it's removed from results by default
-  const user = User.findById(req.user.id).select('+password');
+  const user = await User.findById(req.user.id).select('+password');
   if (!user) {
     throw new AppError('Cannot find a user to update their password', 404);
   }
@@ -333,13 +333,15 @@ export const updateMyEmail = async (req, res) => {
       message: messageNew,
     });
     //send the warning to the current email to revert/block - can't on the Mailtrap free plan :(
-    if (!process.env.NODE_ENV === 'development') {
+    if (process.env.NODE_ENV !== 'development') {
       await sendEmail({
         email: user.email,
         subject:
           '[URGENT SECURITY ISSUE] A request has been made to change your email',
         message: messageOld,
       });
+    } else {
+      console.log(`Fake email for development: ${messageOld}`);
     }
     return res.status(200).json({
       status: 'success',
@@ -353,7 +355,7 @@ export const updateMyEmail = async (req, res) => {
     user.set('emailRevertExpires', undefined, { strict: false });
     user.set('oldEmail', undefined, { strict: false });
     user.set('pendingEmail', undefined, { strict: false });
-    user.save({ validateBeforeSave: false });
+    await user.save({ validateBeforeSave: false });
     //for the improved security version of this we'll simply log any errors rather than throw them
     console.error(`There was an error sending the email change email: ${err}`);
     return res.status(200).json({
@@ -367,7 +369,7 @@ export const updateMyEmail = async (req, res) => {
 //this has been added as there was an obvious security risk to allowing an email to be changed without any checks (ie change email, forgotPassword, reset password = user hijacked)
 export const verifyEmail = async (req, res) => {
   const hashedToken = cryptoHash(req.params.token);
-  const user = User.findOne({
+  const user = await User.findOne({
     emailResetToken: hashedToken,
     emailResetExpires: { $gt: Date.now() },
   });
@@ -392,7 +394,7 @@ export const verifyEmail = async (req, res) => {
 //So the original user can change the email back to as it was before someone tried to change it
 export const revertEmail = async (req, res) => {
   const hashedToken = cryptoHash(req.params.token);
-  const user = User.findOne({
+  const user = await User.findOne({
     emailRevertToken: hashedToken,
     emailRevertExpires: { $gt: Date.now() },
   });
@@ -410,6 +412,8 @@ export const revertEmail = async (req, res) => {
   user.set('emailResetExpires', undefined, { strict: false });
   user.set('emailRevertToken', undefined, { strict: false });
   user.set('emailRevertExpires', undefined, { strict: false });
+  //kick out the hacker if there is one by invalidating their jwt
+  user.passwordChangedAt = new Date(Date.now() - 1000);
 
   await user.save({ validateBeforeSave: false });
 
