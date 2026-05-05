@@ -5,11 +5,12 @@ import {
   forgotPassword,
   resetPassword,
   protect,
+  updateMyEmail,
   verifyEmail,
   revertEmail,
   updateMyPassword,
 } from '../controllers/authController.js';
-import { getAllUsers, updateMyEmail } from '../controllers/userController.js';
+import { getAllUsers } from '../controllers/userController.js';
 
 export const router = express.Router();
 
