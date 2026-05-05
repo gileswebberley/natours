@@ -4,7 +4,12 @@ import jwt from 'jsonwebtoken';
 import ms from 'ms';
 import AppError from '../utils/appError.js';
 import sendEmail from '../utils/email.js';
-import { cryptoHash } from '../utils/utilFunctions.js';
+import {
+  cryptoHash,
+  mimicEmailTimer,
+  mimicWorkTime,
+} from '../utils/utilFunctions.js';
+// import strict from 'node:assert/strict';
 
 //we'll make a little token generation utility function
 const signToken = (id) => {
@@ -124,9 +129,9 @@ export const restrictTo = (...roles) => {
 
 //[TODO] implement a secure route for changing user email to avoid hijacking
 
-//because we have learnt that it is bad to send errors from the forgotPassword function we want to mimic the time it would take to send an email (apparently this helps to stop an attacker from using 'Timing Attacks') - this is not the best approach but ok for now, this leaves the sockets open which uses up RAM on the server. Instead we should consider using background 'workers' - Agenda is a good choice when working with MongoDB and it avoids the need for Redis, which BullMQ requires
-const mimicEmailTimer = 800 + Math.random() * 700;
-const mimicWorkTime = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+//because we have learnt that it is bad to send errors from the forgotPassword function we want to mimic the time it would take to send an email (apparently this helps to stop an attacker from using 'Timing Attacks') - this is not the best approach but ok for now, this leaves the sockets open which uses up RAM on the server. Instead we should consider using background 'workers' - Agenda is a good choice when working with MongoDB and it avoids the need for Redis, which BullMQ requires. I've added this to my utilFunctions as I want to use it in userController for attempted email changes
+// const mimicEmailTimer = 800 + Math.random() * 700;
+// const mimicWorkTime = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 //we will now add the functionality for a user forgetting their password. We'll create a temporary reset token inside an instance method of our user model to produce it, encrypt it, and save it to the user document on the database
 export const forgotPassword = async (req, res) => {
@@ -163,6 +168,25 @@ export const forgotPassword = async (req, res) => {
         });
       }
     }
+    //add in the lock for if the email has been changed and let the old user know that they are at risk of being hijacked
+    if (user.emailChangedAt) {
+      const emailCoolDown = 24 * 60 * 60 * 1000;
+      const isChangeLocked =
+        Date.now() - user.emailChangedAt.getTime() < emailCoolDown;
+      if (isChangeLocked) {
+        if (user.oldEmail) {
+          await sendEmail({
+            email: user.oldEmail,
+            subject:
+              '[SECURITY NOTIFICATION] Someone has tried to reset your password',
+            message: `Someone tried to reset your password shortly after changing your Natours email address to ${user.email}. You should have received an email when this change was made, please find it and follow the link to revert to this address and secure your account.`,
+          });
+        }
+        throw new AppError(
+          `For your security password resets are restricted for 24hrs after an email change`,
+        );
+      }
+    }
 
     //now we'll use the instance method we created in the user model
     const resetToken = user.createPasswordResetToken();
@@ -174,10 +198,10 @@ export const forgotPassword = async (req, res) => {
     const message = `Forgot your password? Submit a PATCH request with your new password and passwordConfirm in the body to: ${resetURL} \nPlease note that this link is only valid for 10 minutes \nIf you did not send this password reset request please ignore this email`;
     //because there may be an error when trying to send an email it might throw an error and we will want to clean up the user so the token doesn't exist
     try {
-      console.log('sending reset email');
+      // console.log('sending reset email');
       await sendEmail({
         email: user.email,
-        subject: 'Your password reset link',
+        subject: 'Your password reset link (expires in 10 minutes)',
         message,
       });
     } catch (err) {
@@ -222,7 +246,7 @@ export const resetPassword = async (req, res) => {
 
 //allow a logged in user to change their password by entering their existing password and their new one
 //expects a body of 'password', 'newPassword', and 'newPasswordConfirm' and it should have been through the protect() middleware
-export const updatePassword = async (req, res) => {
+export const updateMyPassword = async (req, res) => {
   //assume this is a protected route and so we should be able to get our token from the headers - NO NEED remember that protect() adds the current user to the request object
   //don't forget to 'reselect' the password cos it's removed from results by default
   const user = User.findById(req.user.id).select('+password');
@@ -242,4 +266,56 @@ export const updatePassword = async (req, res) => {
       401,
     );
   }
+};
+
+//this has been added as there was an obvious security risk to allowing an email to be changed without any checks (ie change email, forgotPassword, reset password = user hijacked)
+export const verifyEmail = async (req, res) => {
+  const hashedToken = cryptoHash(req.params.token);
+  const user = User.findOne({
+    emailResetToken: hashedToken,
+    emailResetExpires: { $gt: Date.now() },
+  });
+
+  if (!user) {
+    throw new AppError('Email reset token is invalid or has expired', 400);
+  }
+
+  // user.oldEmail = user.email;
+  user.set('oldEmail', user.email, { strict: false });
+  // user.email = user.pendingEmail;
+  user.set('email', user.pendingEmail, { strict: false });
+  user.set('pendingEmail', undefined, { strict: false });
+  user.set('emailResetToken', undefined, { strict: false });
+  user.set('emailResetExpires', undefined, { strict: false });
+
+  await user.save({ validateBeforeSave: false });
+
+  createAndSendToken(user, 200, res);
+};
+
+//So the original user can change the email back to as it was before someone tried to change it
+export const revertEmail = async (req, res) => {
+  const hashedToken = cryptoHash(req.params.token);
+  const user = User.findOne({
+    emailRevertToken: hashedToken,
+    emailRevertExpires: { $gt: Date.now() },
+  });
+
+  if (!user) {
+    throw new AppError('Email revert token is invalid or has expired', 400);
+  }
+
+  // user.oldEmail = user.email;
+  user.set('email', user.oldEmail, { strict: false });
+  // user.email = user.pendingEmail;
+  user.set('oldEmail', undefined, { strict: false });
+  user.set('pendingEmail', undefined, { strict: false });
+  user.set('emailResetToken', undefined, { strict: false });
+  user.set('emailResetExpires', undefined, { strict: false });
+  user.set('emailRevertToken', undefined, { strict: false });
+  user.set('emailRevertExpires', undefined, { strict: false });
+
+  await user.save({ validateBeforeSave: false });
+
+  createAndSendToken(user, 200, res);
 };

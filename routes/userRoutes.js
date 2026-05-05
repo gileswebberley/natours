@@ -4,10 +4,12 @@ import {
   signup,
   forgotPassword,
   resetPassword,
-  updatePassword,
   protect,
+  verifyEmail,
+  revertEmail,
+  updateMyPassword,
 } from '../controllers/authController.js';
-import { getAllUsers } from '../controllers/userController.js';
+import { getAllUsers, updateMyEmail } from '../controllers/userController.js';
 
 export const router = express.Router();
 
@@ -17,6 +19,9 @@ router.route('/signup').post(signup);
 router.route('/login').post(login);
 router.route('/forgotPassword').post(forgotPassword);
 router.route('/resetPassword/:token').patch(resetPassword);
-router.route('/updateMyPassword').patch(protect, updatePassword);
+router.route('/verifyEmail/:token').patch(verifyEmail);
+router.route('/revertEmail/:token').patch(revertEmail);
+router.route('/updateMyPassword').patch(protect, updateMyPassword);
+router.route('/updateMyEmail').patch(protect, updateMyEmail);
 
 router.route('/').get(getAllUsers);

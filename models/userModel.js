@@ -19,6 +19,14 @@ const userSchema = new mongoose.Schema({
     trim: true,
     validate: [validator.isEmail, 'The email address is not considered valid'],
   },
+  //we are still working to make sure a user can't be hijacked by changing email and then requesting a forgot password token
+  pendingEmail: String,
+  oldEmail: String,
+  emailResetToken: String,
+  emailResetExpires: Date,
+  emailChangedAt: Date,
+  emailRevertToken: String,
+  emailRevertExpires: Date,
   photo: {
     type: String,
   },
@@ -79,6 +87,13 @@ userSchema.pre('save', async function () {
   //   next();
 });
 
+//add in the email change security measures that stop you from being able to forget password after an email change
+userSchema.pre('save', function () {
+  if (!this.isNew && this.isModified('email')) {
+    this.emailChangedAt = Date.now();
+  }
+});
+
 userSchema.pre(/^find/, function () {
   this.find({ active: { $ne: false } });
 });
@@ -112,13 +127,42 @@ userSchema.methods.createPasswordResetToken = function () {
   //now encrypt this before sending it to the database (should I be awaiting the digest cos it is documented as returning a promise :/)
   this.passwordResetToken = cryptoHash(resetToken);
 
-  console.log('encryptedResetToken', this.passwordResetToken);
+  //   console.log('encryptedResetToken', this.passwordResetToken);
   //we'll check against this to avoid reset being hammered
   this.passwordResetExpires = new Date(
     Date.now() + Number(process.env.RESET_PASSWORD_EXPIRES_IN),
   ); //10mins
 
   return resetToken;
+};
+
+//similar functionality if you want to change the email address for the user
+userSchema.methods.createEmailResetToken = function () {
+  //create the token with the crypto library
+  const resetToken = crypto.randomBytes(32).toString('hex');
+  //now encrypt this before sending it to the database (should I be awaiting the digest cos it is documented as returning a promise :/)
+  this.emailResetToken = cryptoHash(resetToken);
+
+  //   console.log('encryptedResetToken', this.passwordResetToken);
+  //we'll check against this to avoid reset being hammered
+  this.emailResetExpires = new Date(
+    Date.now() + Number(process.env.RESET_PASSWORD_EXPIRES_IN),
+  ); //10mins
+
+  return resetToken;
+};
+
+userSchema.methods.createEmailRevertToken = function () {
+  //create the token with the crypto library
+  const revertToken = crypto.randomBytes(32).toString('hex');
+  //now encrypt this before sending it to the database (should I be awaiting the digest cos it is documented as returning a promise :/)
+  this.emailRevertToken = cryptoHash(revertToken);
+
+  //   console.log('encryptedResetToken', this.passwordResetToken);
+  //we'll check against this to avoid reset being hammered
+  this.emailRevertExpires = new Date(Date.now() + 48 * 60 * 60 * 1000); //48hrs
+
+  return revertToken;
 };
 
 const User = mongoose.model('User', userSchema);

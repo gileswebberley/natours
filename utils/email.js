@@ -11,7 +11,7 @@ const sendEmail = async (options) => {
   });
   //define the email options
   const mailOptions = {
-    from: 'Giles Webberley <gileswebberley@gmail.com>',
+    from: process.env.MAILTRAP_FROM,
     to: options.email,
     subject: options.subject,
     text: options.message,
