@@ -79,7 +79,8 @@ userSchema.pre('save', async function () {
   //as this will execute after the validation we'll get rid of the confirmation - required just means it is required input
   this.passwordConfirm = undefined;
   //if this is a password reset ie it's not new (signing up) and it has PATCHed the password
-  if (!this.isNew && this.isModified('password')) {
+  if (!this.isNew) {
+    // no need for this as there is an early return  && this.isModified('password')
     //take away a second to handle jwt syncronisation
     this.passwordChangedAt = new Date(Date.now() - 1000);
   }
