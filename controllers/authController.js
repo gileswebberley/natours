@@ -31,7 +31,7 @@ const createAndSendToken = (user, statusCode, res) => {
 
   //we'll now send a cookie with the token as well
   const cookieOptions = {
-    expires: expiresTimestamp,
+    expires: new Date(expiresTimestamp),
     secure: process.env.NODE_ENV === 'production',
     httpOnly: true,
   };
@@ -421,7 +421,9 @@ export const revertEmail = async (req, res) => {
   user.set('emailResetExpires', undefined, { strict: false });
   user.set('emailRevertToken', undefined, { strict: false });
   user.set('emailRevertExpires', undefined, { strict: false });
-  //kick out the hacker if there is one by invalidating their jwt
+  //this is so someone who has averted a hijacking can then immediately change their password if they wish - see the changes to the pre-save hook in the userModel that handles setting this field
+  user.set('emailChangedAt', undefined, { strict: false });
+  //kick out the hacker if there is one by invalidating their jwt, the pre-save hook would not do this automatically as we have not changed the password!
   user.passwordChangedAt = new Date(Date.now() - 1000);
 
   await user.save({ validateBeforeSave: false });

@@ -89,7 +89,12 @@ userSchema.pre('save', async function () {
 
 //add in the email change security measures that stop you from being able to forget password after an email change
 userSchema.pre('save', function () {
-  if (!this.isNew && this.isModified('email')) {
+  //so a user can change their password after they have used the revert to old email functionality we are going to set the emailChangedAt to undefined in the revertEmail controller
+  if (
+    !this.isNew &&
+    this.isModified('email') &&
+    !this.isModified('emailChangedAt')
+  ) {
     this.emailChangedAt = Date.now();
   }
 });
