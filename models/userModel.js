@@ -124,7 +124,7 @@ userSchema.methods.changedPasswordAfterJwtIssue = function (JWTTimestamp) {
 userSchema.methods.createPasswordResetToken = function () {
   //create the token with the crypto library
   const resetToken = crypto.randomBytes(32).toString('hex');
-  //now encrypt this before sending it to the database (should I be awaiting the digest cos it is documented as returning a promise :/)
+  //now encrypt this before sending it to the database (should I be awaiting the digest cos it is documented as returning a promise :/) - apparently not
   this.passwordResetToken = cryptoHash(resetToken);
 
   //   console.log('encryptedResetToken', this.passwordResetToken);

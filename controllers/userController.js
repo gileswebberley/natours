@@ -1,11 +1,7 @@
 import User from '../models/userModel.js';
 import AppError from '../utils/appError.js';
 import sendEmail from '../utils/email.js';
-import {
-  filterObj,
-  mimicEmailTimer,
-  mimicWorkTime,
-} from '../utils/utilFunctions.js';
+import { filterObj } from '../utils/utilFunctions.js';
 
 //handy function to filter out any sneaky injected stuff like setting role:admin
 
@@ -46,5 +42,23 @@ export const updateMe = async (req, res) => {
     data: {
       user: updatedUser,
     },
+  });
+};
+
+//we do not actually delete a user but instead we hide it by setting active to false and then create a pre-find hook that deselects them - this is not good in terms of gdpr and also means that a user that thinks they've deleted their account can't then sign-up with the same (their) email address. The solution, to keep a user in existence for relational integrity (ie if they have bookings associated with the userid then deleting them completely would cause requests to fail) is to anonymise their data
+export const deleteUser = async (req, res) => {
+  const anonymisedUser = {
+    active: false,
+    name: 'deleted_user',
+    email: `deleted_${Date.now().getTime()}@natours.com`,
+    password: null,
+    photo: null,
+  };
+  await User.findByIdAndUpdate(req.user.id, anonymisedUser, {
+    runValidators: false,
+  });
+  res.status(204).json({
+    status: 'success',
+    data: null,
   });
 };

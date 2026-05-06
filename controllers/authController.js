@@ -25,9 +25,18 @@ const createAndSendToken = (user, statusCode, res) => {
   //   user.select('-password');
   const userObject = user.toObject();
   delete userObject.password;
-  //convert the expiry into an actual timestamp, jsonwebtoken apparently uses a package called ms to parse these strings
+  //convert the expiry into an actual timestamp, jsonwebtoken apparently uses a package called ms to parse these strings (like 90d or 300m)
   const expiresMS = ms(process.env.JWT_EXPIRES_IN);
   const expiresTimestamp = Date.now() + expiresMS;
+
+  //we'll now send a cookie with the token as well
+  const cookieOptions = {
+    expires: expiresTimestamp,
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: true,
+  };
+  //and add this to the response by using the cookie(name, value, options) method - the name is unique so if you send a new one it will simply replace the cookie that the client has in their browser.
+  res.cookie('jwt', token, cookieOptions);
   //It doesn't in the course but should we not send the client the expires-in time too?
   res.status(statusCode).json({
     status: 'success',
@@ -128,7 +137,7 @@ export const restrictTo = (...roles) => {
   next();
 };
 
-//[TODO] implement a secure route for changing user email to avoid hijacking
+//[TODO][DONE] implement a secure route for changing user email to avoid hijacking
 
 //because we have learnt that it is bad to send errors from the forgotPassword function we want to mimic the time it would take to send an email (apparently this helps to stop an attacker from using 'Timing Attacks') - this is not the best approach but ok for now, this leaves the sockets open which uses up RAM on the server. Instead we should consider using background 'workers' - Agenda is a good choice when working with MongoDB and it avoids the need for Redis, which BullMQ requires. I've added this to my utilFunctions as I want to use it in userController for attempted email changes
 // const mimicEmailTimer = 800 + Math.random() * 700;
