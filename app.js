@@ -10,6 +10,7 @@ import helmet from 'helmet';
 import ExpressMongoSanitize from 'express-mongo-sanitize';
 import xss from 'xss-clean';
 import cookieParser from 'cookie-parser';
+import hpp from 'hpp';
 // import rateLimit from 'express-rate-limit';
 //remember these are properties of the node.js wrapper function when using commonJS modules (ie require()) so we do not have access to them when we are using ES modules (import/export) so we have to create our own
 const __filename = fileURLToPath(import.meta.url);
@@ -17,6 +18,7 @@ const __dirname = path.dirname(__filename);
 
 //export app for server.js to use
 export const app = express();
+//I have spent a long time making the security features taught in the course work with Express 5 and we should be good now. REMEMBER to treat the req.query object as immutable in the rest of your controllers though as that is the expected behaviour in Express 5 (see the alias route in the tourControllers file for an example of this)
 
 // for parsing queries with for example duration[gte]=5 we need to set the extended option to true, unlike in the course where it worked out of the box
 app.set('query parser', 'extended');
@@ -73,6 +75,20 @@ app.use(ExpressMongoSanitize());
 
 //and also protect against XSS (Cross Site Scripting) that might get past our model validation
 app.use(xss());
+
+//finally protect against parameter pollution (eg sort=price&sort=duration) as the sort method expects a string and these parameters would be returned as an array and cause an error. All of the other params are fine so we add them to a whitelist. Be aware that if this comes across multiple sorts it will only use the last one!
+app.use(
+  hpp({
+    whitelist: [
+      'duration',
+      'ratingsAverage',
+      'ratingsQuantity',
+      'maxGroupSize',
+      'difficulty',
+      'price',
+    ],
+  }),
+);
 
 app.use(express.static(`${__dirname}/public`));
 
