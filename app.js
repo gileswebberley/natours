@@ -7,8 +7,10 @@ import AppError from './utils/appError.js';
 import globalErrorHandler from './controllers/errorController.js';
 import { globalLimiter } from './utils/rateLimiters.js';
 import helmet from 'helmet';
-import ExpressMongoSanitize from 'express-mongo-sanitize';
-import xss from 'xss-clean';
+import sanitizer from 'perfect-express-sanitizer';
+//replaced by perfect-express-sanitizer
+// import ExpressMongoSanitize from 'express-mongo-sanitize';
+// import xss from 'xss-clean';
 import cookieParser from 'cookie-parser';
 import hpp from 'hpp';
 // import rateLimit from 'express-rate-limit';
@@ -69,12 +71,24 @@ app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 
 //another change for Express 5 is that a cookie-parser is no longer included and so if you try to access the cookie like in the course with req.cookies.jwt it will throw an error. By adding signed:true to the cookie we could access it via req.signedCookies.jwt but this would require a secret and clash with helmet.
 app.use(cookieParser());
-
+//------------------------------------------------------------------------------------
+//SO....after all that I've found that both of these can be replaced with the perfect-express-sanitizer package like so!!
+app.use(
+  sanitizer.clean({
+    xss: true, // Removes malicious HTML/Script tags
+    noSql: true, // Prevents MongoDB operator injection (like $gt)
+    sql: false, // Set to false as you are using MongoDB
+    noSqlLevel: 5, // Highest level of protection
+    sanitizeKeys: true, // Also cleans the keys in your JSON objects
+    allowedKeys: ['email', 'password'], // Whitelist fields that need special characters
+  }),
+);
 //now the body has been parsed we need to protect against NoSQL Query Injection (which is mind blowing) - these no longer work as they try to mutate the req.query object which is read-only in Express 5. To fix this we will have to add a hack where we 'unlock the query object'.
-app.use(ExpressMongoSanitize());
+// app.use(ExpressMongoSanitize());
 
 //and also protect against XSS (Cross Site Scripting) that might get past our model validation
-app.use(xss());
+// app.use(xss());
+//------------------------------------------------------------------------------------
 
 //finally protect against parameter pollution (eg sort=price&sort=duration) as the sort method expects a string and these parameters would be returned as an array and cause an error. All of the other params are fine so we add them to a whitelist. Be aware that if this comes across multiple sorts it will only use the last one!
 app.use(
