@@ -28,10 +28,20 @@ Mongoose (and standard JavaScript Error objects) typically define properties lik
     //and this is quite self explanatory
     if (error.name === 'TokenExpiredError')
       error = handleJWTExpiredError(error);
+    //now we have set size limits in our express.json() and express.urlencoded() body parsers we want to check for them being violated too
+    if (error.type === 'entity.too.large' || error.statusCode === 413)
+      error = handlePayloadTooLargeError(error);
 
     sendErrorProd(error, res);
   }
 };
+
+function handlePayloadTooLargeError(err) {
+  return new AppError(
+    'Payload too large, please reduce the size of your request body to the limit of 10kb',
+    413,
+  );
+}
 
 function handleJWTError(err) {
   return new AppError('Please login to get a valid token', 401);

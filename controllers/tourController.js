@@ -2,11 +2,11 @@ import Tour from '../models/tourModel.js';
 import APIFeatures from '../utils/apiFeatures.js';
 import AppError from '../utils/appError.js';
 
-//middleware for our first alias route (see tourRoutes as well)
+//middleware for our first alias route (see tourRoutes as well) - use nullish coalescing operator to avoid trying to spread undefined.
 export const aliasTopTours = (req, res, next) => {
   req.aliasQuery = {
-    ...req.query,
-    ...req.aliasQuery,
+    ...(req.query ?? {}),
+    ...(req.aliasQuery ?? {}),
     limit: '5',
     sort: '-ratingsAverage,price',
     fields: 'name,price,ratingsAverage,summary,difficulty',

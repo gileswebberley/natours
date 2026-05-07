@@ -9,6 +9,7 @@ import { globalLimiter } from './utils/rateLimiters.js';
 import helmet from 'helmet';
 import ExpressMongoSanitize from 'express-mongo-sanitize';
 import xss from 'xss-clean';
+import cookieParser from 'cookie-parser';
 // import rateLimit from 'express-rate-limit';
 //remember these are properties of the node.js wrapper function when using commonJS modules (ie require()) so we do not have access to them when we are using ES modules (import/export) so we have to create our own
 const __filename = fileURLToPath(import.meta.url);
@@ -47,11 +48,27 @@ app.use(
 //add the global limit to our entire api route
 app.use('/api', globalLimiter);
 
-// middleware
+//this is a hack to allow us to carry on using the expressMongoSanitize package as it tries to mutate the req.query object which is now read-only.
+app.use((req, res, next) => {
+  Object.defineProperty(req, 'query', {
+    value: { ...req.query },
+    writable: true,
+    configurable: true,
+    enumerable: true,
+  });
+  next();
+});
+
 //first we add this body-parser so that our controllers can access the body of a request as req.body (as seen in checkBody in the tourControllers file). We also set a maximum size to avoid Denial of Service attacks like Resource Exhaustion
 app.use(express.json({ limit: '10kb' }));
 
-//now the body has been parsed we need to protect against NoSQL Query Injection (which is mind blowing)
+//we also have to add in the body parser when using Express 5 as it is no longer included by default and will stop the app from crashing when we go on to use forms later
+app.use(express.urlencoded({ extended: true, limit: '10kb' }));
+
+//another change for Express 5 is that a cookie-parser is no longer included and so if you try to access the cookie like in the course with req.cookies.jwt it will throw an error. By adding signed:true to the cookie we could access it via req.signedCookies.jwt but this would require a secret and clash with helmet.
+app.use(cookieParser());
+
+//now the body has been parsed we need to protect against NoSQL Query Injection (which is mind blowing) - these no longer work as they try to mutate the req.query object which is read-only in Express 5. To fix this we will have to add a hack where we 'unlock the query object'.
 app.use(ExpressMongoSanitize());
 
 //and also protect against XSS (Cross Site Scripting) that might get past our model validation
