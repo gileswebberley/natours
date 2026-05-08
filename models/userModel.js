@@ -4,7 +4,7 @@ import bcrypt from 'bcryptjs';
 import crypto from 'node:crypto';
 import { cryptoHash } from '../utils/utilFunctions.js';
 
-//5 fields name, email, photo, password, passwordConfirm
+//The schema defines the structure of documents (the 'blueprint') whilst the model creates the collection and provides the interface for working with those documents (like queries and updates)
 const userSchema = new mongoose.Schema({
   name: {
     type: String,

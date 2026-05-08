@@ -1,5 +1,7 @@
 import mongoose from 'mongoose';
 import slugify from 'slugify';
+//we've made a utility location file that contains a schema (not a model because these are sub-documents so we won't be trying Location.find() for example)and a factory function for creating the locations embedded in the tours
+import { locationSchema } from '../utils/location.js';
 
 // Any data sent as a Tour that is not in this schema will be ignored and not saved to the database
 const tourSchema = new mongoose.Schema(
@@ -78,6 +80,14 @@ const tourSchema = new mongoose.Schema(
       default: Date.now(),
       select: false,
     },
+    startLocation: locationSchema,
+    locations: [locationSchema],
+    // guides: [
+    //   {
+    //     type: mongoose.Schema.ObjectId,
+    //     ref: 'User',
+    //   },
+    // ],
     startDates: [Date],
     secretTour: {
       type: Boolean,
@@ -90,6 +100,18 @@ const tourSchema = new mongoose.Schema(
     toObject: { virtuals: true },
   },
 );
+
+//so we could run 'near me' run queries, or maybe more specifically aggregation stages, on startLocation or locations we should index these fields accordingly. The aggregation would use something like $geoNear although because we'll have a few indexed we have to provide the key property like so -
+// In your controller aggregation
+// {
+//   $geoNear: {
+//     near: { type: 'Point', coordinates: [lng, lat] },
+//     distanceField: 'distance',
+//     key: 'startLocation' // <--- You must specify this if you have multiple geo-indexes
+//   }
+// }
+tourSchema.index({ startLocation: '2dsphere' });
+tourSchema.index({ locations: '2dsphere' });
 
 //As an example of how to create virtual properties....
 tourSchema.virtual('durationInWeeks').get(function () {

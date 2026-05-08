@@ -13,7 +13,6 @@ import sanitizer from 'perfect-express-sanitizer';
 // import xss from 'xss-clean';
 import cookieParser from 'cookie-parser';
 import hpp from 'hpp';
-// import rateLimit from 'express-rate-limit';
 //remember these are properties of the node.js wrapper function when using commonJS modules (ie require()) so we do not have access to them when we are using ES modules (import/export) so we have to create our own
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
