@@ -3,6 +3,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { router as tourRouter } from './routes/tourRoutes.js';
 import { router as userRouter } from './routes/userRoutes.js';
+import { router as reviewRouter } from './routes/reviewRoutes.js';
 import AppError from './utils/appError.js';
 import globalErrorHandler from './controllers/errorController.js';
 import { globalLimiter } from './utils/rateLimiters.js';
@@ -114,6 +115,8 @@ app.use((req, res, next) => {
 app.use('/api/v1/tours', tourRouter);
 // now add in our users route
 app.use('/api/v1/users', userRouter);
+// add in our new reviews route
+app.use('/api/v1/reviews', reviewRouter);
 
 app.all('/{*any}', (req, res, next) => {
   next(new AppError(`${req.originalUrl} cannot be found on this server`, 404));
