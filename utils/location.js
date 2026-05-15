@@ -17,7 +17,7 @@ export const locationSchema = new mongoose.Schema(
     //the day field is to denote which day of the trip we visit this location
     day: Number,
   },
-  //if we didn't want/need these to have an id we could add the option object {_id:false} as the second argument - we need this to upload our json file as it has the _id field in the locations
+  //if we didn't want/need these to have an id we could add the option object {_id:false} as the second argument
   //   { _id: false },
 );
 

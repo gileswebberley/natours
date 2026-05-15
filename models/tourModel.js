@@ -82,12 +82,13 @@ const tourSchema = new mongoose.Schema(
     },
     startLocation: locationSchema,
     locations: [locationSchema],
-    // guides: [
-    //   {
-    //     type: mongoose.Schema.ObjectId,
-    //     ref: 'User',
-    //   },
-    // ],
+    //our first field that contains references to another collection
+    guides: [
+      {
+        type: mongoose.Schema.ObjectId,
+        ref: 'User',
+      },
+    ],
     startDates: [Date],
     secretTour: {
       type: Boolean,
@@ -111,8 +112,8 @@ const tourSchema = new mongoose.Schema(
 //   }
 // }
 tourSchema.index({ startLocation: '2dsphere' });
-//this won't work because the locations all have an _id field
-// tourSchema.index({ locations: '2dsphere' });
+//this won't work because the locations all have an _id field - notice the more specific path to the coordinates field, this is because as it was an array of locations (rather than the single startLocation which worked fine) it was struggling to see the locations as GeoJSON objects and so failing to create the index. After days of going back and forth I discovered this trick to make sure it could find it's way to the data that needed indexing.
+tourSchema.index({ 'locations.coordinates': '2dsphere' });
 
 //As an example of how to create virtual properties....
 tourSchema.virtual('durationInWeeks').get(function () {
@@ -125,10 +126,27 @@ tourSchema.pre('save', function () {
   }
 });
 
+//if we had an array of guide user ids and we wanted to embed their documents into the tours (we will not do this but it is a handy bit of knowledge for the future) we could do it like this. Notice that we get an array of promises and then use the Promise.all method to populate the guides array with the actual user documents.
+// tourSchema.pre('save', async function () {
+//   const guidePromises = this.guides.map(async (id) => await User.findById(id));
+//   this.guides = await Promise.all(guidePromises);
+// });
+
 tourSchema.pre(/^find/, function () {
   this.find({ secretTour: { $ne: true } });
   this.start = Date.now();
   //   console.log(`start query time: ${this.start}`);
+});
+
+//Now that we have added the references to guides in our schema if we wanted to 'populate' the guides field with the actaul users referenced we could do it like this. Be aware that this is a bit of a performance hit so this is for demonstration purposes more than for a production application
+tourSchema.pre(/^find/, function () {
+  //add our populate to the end of the query which is available here as the this keyword. We can also specify fields to select/deselect by adding the select property to the options object.
+  if (this.guides) {
+    this.populate({
+      path: 'guides',
+      select: '-__v -passwordChangedAt',
+    });
+  }
 });
 
 //In the post-query hook we have access to all of the documents that have been returned by the query - just a little lesson learnt - I implemented the next(new AppError) replacement for try-catch in getTourById and even when I was throwing an error this still ran and caused an error to be thrown so had to add optional chaining to docs.length to stop it from checking a null object for it's length property.
