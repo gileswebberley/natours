@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+
 // import { app } from './app.js';// so the uncaught exceptions handler works with the app module we will dynamically import it instead
 
 process.on('uncaughtException', (err) => {
@@ -21,6 +22,7 @@ async function startServer() {
     );
     await mongoose.connect(DB);
     console.log('Connected to MongoDB...');
+    //we're trying to index the locations but only startLocation is registering on Compass
 
     //dynamically import the app
     const { app } = await import('./app.js');

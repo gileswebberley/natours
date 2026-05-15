@@ -111,7 +111,8 @@ const tourSchema = new mongoose.Schema(
 //   }
 // }
 tourSchema.index({ startLocation: '2dsphere' });
-tourSchema.index({ locations: '2dsphere' });
+//this won't work because the locations all have an _id field
+// tourSchema.index({ locations: '2dsphere' });
 
 //As an example of how to create virtual properties....
 tourSchema.virtual('durationInWeeks').get(function () {

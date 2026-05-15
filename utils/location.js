@@ -8,13 +8,17 @@ export const locationSchema = new mongoose.Schema(
       default: 'Point',
       enum: ['Point'],
     },
-    coordinates: [Number],
+    coordinates: {
+      type: [Number],
+      required: [true, 'A location must have coordinates'],
+    },
     address: String,
     description: String,
     //the day field is to denote which day of the trip we visit this location
     day: Number,
   },
-  //if we didn't want/need these to have an id we could add the option object {_id:false} as the second argument
+  //if we didn't want/need these to have an id we could add the option object {_id:false} as the second argument - we need this to upload our json file as it has the _id field in the locations
+  //   { _id: false },
 );
 
 //Now we'll create a factory function so that we can create them with a simple call and also ensures that the structure is always correct.

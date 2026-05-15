@@ -8,18 +8,37 @@ import Tour from '../../models/tourModel.js';
 loadEnvFile('../../.env.development');
 
 // remember that when we try running this from the terminal we will have to be in the dev-data/data folder for this filepath to work - simply run a node process from there with node import-dev-data.js and it has all worked :)
-const tours = JSON.parse(fs.readFileSync(`./tours-simple.json`, 'utf-8'));
+const tours = JSON.parse(fs.readFileSync(`./tours.json`, 'utf-8'));
 
 async function importData() {
   try {
+    //cast all of the id strings to proper ObjectIDs
+    const cleanTours = tours.map((tour) => {
+      tour._id = new mongoose.Types.ObjectId(tour._id.toString());
+
+      if (tour.locations) {
+        tour.locations = tour.locations.map((loc) => ({
+          ...loc,
+          _id: new mongoose.Types.ObjectId(loc._id.toString()), // <--- CRITICAL FIX
+        }));
+      }
+
+      if (tour.guides) {
+        tour.guides = tour.guides.map(
+          (id) => new mongoose.Types.ObjectId(id.toString()),
+        );
+      }
+
+      return tour;
+    });
     //the create method can also take an array of objects as well as individual objects, it will then create a document for each of the objects
-    await Tour.create(tours);
+    await Tour.insertMany(cleanTours);
     console.log('Tours data upload success!');
     //and then force the process to exit once the data has been exported to the db so we don't have to do it manually from the terminal
-    process.exit();
   } catch (error) {
     console.log(error);
   }
+  process.exit();
 }
 
 const DB = process.env.DATABASE_URI.replace(
@@ -30,7 +49,7 @@ mongoose
   .connect(DB)
   .then(() => {
     console.log('Connected to MongoDB...');
-    // in the course we are introduced to using the command line to run this script with a flag that can be retrieved from the process object in Node. This would mean that we could simply add --import to the end of the command and then grab it using the process.argv array, however this may be for when the course was produced using commonJS modules rather than ES modules apparently. Instead I will simply call it when the connection is established like so.
+    // in the course we are introduced to using the command line to run this script with a flag that can be retrieved from the process object in Node. This would mean that we could simply add --import to the end of the command and then grab it using the process.argv array, however this may be for when the course was produced using commonJS modules rather than ES modules apparently. Instead I will simply call it when the connection is established like so. Just ensure that you 'drop' the collection in Compass before executing this script seeing as we have not implemented the --delete flag functionality.
     importData();
   })
   .catch((err) => console.error('Error connecting to MongoDB:', err));
