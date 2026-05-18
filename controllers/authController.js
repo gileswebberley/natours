@@ -133,8 +133,8 @@ export const restrictTo = (...roles) => {
         new AppError('You do not have permission to perform this action', 403),
       );
     }
+    next();
   };
-  next();
 };
 
 //[TODO][DONE] implement a secure route for changing user email to avoid hijacking

@@ -10,8 +10,11 @@ import {
   getMonthlyPlan,
 } from '../controllers/tourController.js';
 import { protect, restrictTo } from '../controllers/authController.js';
+import { router as reviewRouter } from './reviewRoutes.js';
 
 export const router = express.Router();
+//we want to pass on the review route /:tourId/reviews to the review router instead of implementing it twice (ie here and there). As the Router is simply a bit of middleware we can use the use() method to do this, however we'll need to add a mergeParams option in our review router to be able to access tourId
+router.use('/:tourId/reviews', reviewRouter);
 
 //create our first 'alias route' for top 5 cheapest
 router.route('/top-5-cheapest').get(aliasTopTours, getAllTours);
