@@ -33,6 +33,14 @@ const reviewSchema = new mongoose.Schema(
   },
 );
 
+//we're creating a populate middleware for the user field in the reviews, however we'll not add in the tour as we are going to make it so that the tour document has a virtual populate for it's reviews and we'll only have them attached to a tour when we get a single tour by id.
+reviewSchema.pre(/^find/, function () {
+  this.populate({
+    path: 'user',
+    select: 'name photo',
+  });
+});
+
 const Review = mongoose.model('Review', reviewSchema);
 
 export default Review;

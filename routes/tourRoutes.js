@@ -27,5 +27,5 @@ router.route('/').get(protect, getAllTours).post(createTour);
 router
   .route('/:id')
   .get(getTourById)
-  .patch(updateTour)
+  .patch(protect, restrictTo('admin', 'lead-guide'), updateTour)
   .delete(protect, restrictTo('admin', 'lead-guide'), deleteTour);

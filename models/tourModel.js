@@ -120,6 +120,14 @@ tourSchema.virtual('durationInWeeks').get(function () {
   return this.duration / 7;
 });
 
+//now we will create a 'virtual populate' for the reviews that belong to a tour. This is a bit of a hack but it allows us to get the reviews for a tour without actually storing an array of review ids in the tour document (which would be a bit of a nightmare to maintain and could cause performance issues if there were a lot of reviews). The virtual populate will not actually add the reviews to the tour document but it will allow us to get them when we query for a tour by id and use the populate method on the query. Just to reinstate - the virtual field will be called 'reviews' and will appear to be a member of any requests for a tour that uses the populate() method to populate the reviews, it will NOT however be part of the tour documents on the database.
+tourSchema.virtual('reviews', {
+  //ref = the model that we are referencing, foreignField = the field in the review model that points to the tour (ie the tour field in the review model) and localField = the field in the tour model that is being referenced (ie the _id field in the tour model)
+  ref: 'Review',
+  foreignField: 'tour',
+  localField: '_id',
+});
+
 tourSchema.pre('save', function () {
   if (this.isModified('name')) {
     this.slug = slugify(this.name, { lower: true });
