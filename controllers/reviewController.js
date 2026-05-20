@@ -1,22 +1,19 @@
 import mongoose from 'mongoose';
 import Review from '../models/reviewModel.js';
+import { getAll } from './handlerFactory.js';
 
-export const getAllReviews = async (req, res) => {
+//so we can use the factory getAll we'll need a tiny bit of middleware for the possibility of this being a nested route with the tourId in the params
+export const createTourReviewFilter = (req, res, next) => {
   let filter = {};
   if (req.params.tourId) filter = { tour: req.params.tourId };
-  const reviews = await Review.find(filter);
-  res.status(200).json({
-    status: 'success',
-    results: reviews.length,
-    data: {
-      reviews,
-    },
-  });
+  req.getAllFilter = filter;
+  next();
 };
+
+export const getAllReviews = getAll(Review);
 
 //this is running through the protect middleware in authController and so we have the user object on the req object
 export const createReview = async (req, res) => {
-  console.log('Creating review');
   //we are going to allow this to work with a nested route, seeing as this relates to a tour and we don't want the user to have to add the tour id manually to the req.body we'll check if it has been supplied and if not we'll assume it is in the params
   const tourId = req.body.tour ? req.body.tour : req.params.tourId;
   if (!tourId) {

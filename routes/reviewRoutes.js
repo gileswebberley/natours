@@ -2,6 +2,7 @@ import express from 'express';
 import { restrictTo, protect } from '../controllers/authController.js';
 import {
   createReview,
+  createTourReviewFilter,
   getAllReviews,
 } from '../controllers/reviewController.js';
 
@@ -11,5 +12,5 @@ export const router = express.Router({ mergeParams: true });
 
 router
   .route('/')
-  .get(getAllReviews)
+  .get(createTourReviewFilter, getAllReviews)
   .post(protect, restrictTo('user'), createReview);

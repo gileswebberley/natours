@@ -1,7 +1,7 @@
 import Tour from '../models/tourModel.js';
 import APIFeatures from '../utils/apiFeatures.js';
 import AppError from '../utils/appError.js';
-import { deleteOne, getAll, updateOne } from './handlerFactory.js';
+import { getAll } from '../controllers/handlerFactory.js';
 
 //middleware for our first alias route (see tourRoutes as well) - use nullish coalescing operator to avoid trying to spread undefined.
 export const aliasTopTours = (req, res, next) => {
@@ -15,15 +15,36 @@ export const aliasTopTours = (req, res, next) => {
   next();
 };
 
-//Implementing factory handler functions - this one is particularly handy because it allows all getAll controllers to use the APIFeatures for sorting, filtering, etc without having to implement all of that logic in each model's controller.
-export const getAllTours = getAll(Tour);
+//No need to use next() in a 'destination controller' ie one that sends a response and therefore is at the end of a pipeline
+export const getAllTours = async (req, res) => {
+  //check if we have been through an alias route and change all references to req.query to this variable instead
+  const queryParams = req.aliasQuery || req.query;
 
-export const updateTour = updateOne(Tour);
+  //use our new features class - simply pass in the initial query object and the query string
+  const features = new APIFeatures(Tour.find(), queryParams)
+    .filter()
+    .sort()
+    .limitFields()
+    .paginate();
 
-export const deleteTour = deleteOne(Tour);
+  // now we can finally execute our query
+  const tours = await features.query;
+  //Not really an error so just return no results
+  // if (tours.length === 0) {
+  //   return next(new AppError('No tours found', 404));
+  // }
+  res.status(200).json({
+    status: 'success',
+    results: tours.length,
+    data: {
+      tours,
+    },
+  });
+};
 
 export const createTour = async (req, res) => {
   const newTour = await Tour.create(req.body);
+  //as an example of not returning next(err) but throwing the error instead - both work, just don't add the next argument otherwise it expects you to use it manually
   if (!newTour) throw new AppError('Failed to create new tour', 400);
 
   res.status(201).json({
@@ -51,6 +72,47 @@ export const getTourById = async (req, res) => {
       tour: thisTour,
     },
   });
+};
+
+export const updateTour = async (req, res) => {
+  const tour = await Tour.findByIdAndUpdate(req.params.id, req.body, {
+    returnDocument: 'after',
+    runValidators: true,
+  });
+
+  if (!tour)
+    throw new AppError(`Failed to update tour with id ${req.params.id}`, 400);
+  res.status(200).json({
+    status: 'success',
+    data: {
+      tour,
+    },
+  });
+};
+
+export const deleteTour = async (req, res) => {
+  // try {
+  const tour = await Tour.findByIdAndDelete(req.params.id);
+
+  if (!tour)
+    throw new AppError(
+      `No tour found to be deleted with id: ${req.params.id}`,
+      404,
+    );
+
+  res.status(204).send();
+  // } catch (err) {
+  //   if (err.name === 'CastError') {
+  //     return res.status(400).json({
+  //       status: 'fail',
+  //       message: `Invalid id format: ${req.params.id}`,
+  //     });
+  //   }
+  //   res.status(500).json({
+  //     status: 'fail',
+  //     message: err,
+  //   });
+  // }
 };
 
 export const getTourStats = async (req, res) => {
