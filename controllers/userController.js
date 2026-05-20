@@ -2,13 +2,14 @@ import User from '../models/userModel.js';
 import AppError from '../utils/appError.js';
 import sendEmail from '../utils/email.js';
 import { filterObj } from '../utils/utilFunctions.js';
-import { deleteOne, getAll } from './handlerFactory.js';
+import { deleteOne, getAll, getOne } from './handlerFactory.js';
 
 //handy function to filter out any sneaky injected stuff like setting role:admin when updating can be found in the utils/utilFunctions.js file and simply takes an object and a list of allowed fields and then creates a new object with only those fields in it - this is used in the updateMe controller to filter out any fields that the user is not allowed to change (like role or password)
 
 export const getAllUsers = getAll(User);
 //This is for admin use only (see the deleteUser route in userRoutes)
-export const deleteUser = deleteOne(User);
+export const deleteUserById = deleteOne(User);
+export const getUserById = getOne(User);
 
 //updating password is seperate in general and so we have done that in authController. The obvious risk of being able to change the email has led to several security considerations. I have therefore implemented a safer forgotPassword in authController and I will require the current password to be able to change the email field - let's make the email change a seperate route actually.
 export const updateMe = async (req, res) => {

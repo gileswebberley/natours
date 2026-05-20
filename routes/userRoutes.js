@@ -12,8 +12,9 @@ import {
   restrictTo,
 } from '../controllers/authController.js';
 import {
-  deleteUser,
+  deleteUserById,
   getAllUsers,
+  getUserById,
   softDeleteUser,
   updateMe,
 } from '../controllers/userController.js';
@@ -38,6 +39,9 @@ router.route('/updateMyEmail').patch(authLimiter, protect, updateMyEmail);
 router.route('/updateMe').patch(authLimiter, protect, updateMe);
 
 router.route('/deleteMe').delete(authLimiter, protect, softDeleteUser);
-router.route('/deleteUser').delete(protect, restrictTo('admin'), deleteUser);
+router
+  .route('/deleteUser')
+  .delete(protect, restrictTo('admin'), deleteUserById);
 
 router.route('/').get(getAllUsers);
+router.route('/:id').get(getUserById);

@@ -1,7 +1,7 @@
 import Tour from '../models/tourModel.js';
 import APIFeatures from '../utils/apiFeatures.js';
 import AppError from '../utils/appError.js';
-import { deleteOne, getAll, updateOne } from './handlerFactory.js';
+import { deleteOne, getAll, getOne, updateOne } from './handlerFactory.js';
 
 //middleware for our first alias route (see tourRoutes as well) - use nullish coalescing operator to avoid trying to spread undefined.
 export const aliasTopTours = (req, res, next) => {
@@ -22,6 +22,9 @@ export const updateTour = updateOne(Tour);
 
 export const deleteTour = deleteOne(Tour);
 
+//because of the virtual populate for reviews on the tour model we simply pass in the name of the virtual field as the second optional argument
+export const getTourById = getOne(Tour, { path: 'reviews' });
+
 export const createTour = async (req, res) => {
   const newTour = await Tour.create(req.body);
   if (!newTour) throw new AppError('Failed to create new tour', 400);
@@ -34,24 +37,24 @@ export const createTour = async (req, res) => {
   });
 };
 
-export const getTourById = async (req, res) => {
-  //now we have implemented the global error handler in app.js apparently Express 5 will automatically throw rejected promises to that - let's see....yup it works but the statusCode is not set so it defaults to 500
-  //we have created a virtual populate on our tour model for the reviews that are associated to a tour so we can simply call populate() with the name of the virtual field.
-  const thisTour = await Tour.findById(req.params.id).populate('reviews');
-  //to get around the status code being 500 we can do this - just call next with an instance of our new AppError class
-  //This doesn't however deal with the castError that is thrown by the findById(), for this we'll go back to our global error handler function and deal with these cases...
-  if (!thisTour) {
-    //no need to return an error in the next method, simply throw it and it will be caught by the global error handler in Express 5 - just make sure not to add the next argument to the function otherwise it will expect you to use it manually and won't catch thrown errors
-    throw new AppError(`No tour can be found with id: ${req.params.id}`, 400);
-  }
+// async (req, res) => {
+//   //now we have implemented the global error handler in app.js apparently Express 5 will automatically throw rejected promises to that - let's see....yup it works but the statusCode is not set so it defaults to 500
+//   //we have created a virtual populate on our tour model for the reviews that are associated to a tour so we can simply call populate() with the name of the virtual field.
+//   const thisTour = await Tour.findById(req.params.id).populate('reviews');
+//   //to get around the status code being 500 we can do this - just call next with an instance of our new AppError class
+//   //This doesn't however deal with the castError that is thrown by the findById(), for this we'll go back to our global error handler function and deal with these cases...
+//   if (!thisTour) {
+//     //no need to return an error in the next method, simply throw it and it will be caught by the global error handler in Express 5 - just make sure not to add the next argument to the function otherwise it will expect you to use it manually and won't catch thrown errors
+//     throw new AppError(`No tour can be found with id: ${req.params.id}`, 400);
+//   }
 
-  res.status(200).json({
-    status: 'success',
-    data: {
-      tour: thisTour,
-    },
-  });
-};
+//   res.status(200).json({
+//     status: 'success',
+//     data: {
+//       tour: thisTour,
+//     },
+//   });
+// };
 
 export const getTourStats = async (req, res) => {
   // try {
