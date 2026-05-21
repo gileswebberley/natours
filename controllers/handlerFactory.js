@@ -4,7 +4,22 @@ import AppError from '../utils/appError.js';
 
 //Remember that if you have non-generic steps in your controllers you can simply factor those out into a seperate piece of middleware and then pass the relevant route through that first
 
-//No point adding a createOne function as they are quite specific to each model - user creation is with sign-up, review creation requires checks for user/tour id and also casting them to ObjectIds, and so the only plain one is for creating a tour and that's only a couple of lines anyway
+//No point adding a createOne function as they are quite specific to each model - user creation is with sign-up, review creation requires checks for user/tour id and also casting them to ObjectIds, and so the only plain one is for creating a tour and that's only a couple of lines anyway. Actually we'll add an admin only createUser controller so we'll do the createOne function after all.
+export const createOne = (Model) => async (req, res) => {
+  const document = await Model.create(req.body);
+  if (!document)
+    throw new AppError(
+      `Failed to create new ${Model.modelName.toLowerCase()}`,
+      400,
+    );
+
+  res.status(201).json({
+    status: 'success',
+    data: {
+      document,
+    },
+  });
+};
 
 //Works for tours, users, and reviews as it stands
 export const getAll = (Model) => async (req, res) => {
@@ -54,6 +69,7 @@ export const getOne = (Model, populateOptions) => async (req, res) => {
   });
 };
 
+//only used for tours at the moment!
 export const updateOne = (Model) => async (req, res) => {
   const document = await Model.findByIdAndUpdate(req.params.id, req.body, {
     returnDocument: 'after',

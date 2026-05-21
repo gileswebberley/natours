@@ -12,11 +12,14 @@ import {
   restrictTo,
 } from '../controllers/authController.js';
 import {
+  createUser,
   deleteUserById,
   getAllUsers,
+  getMe,
   getUserById,
   softDeleteUser,
   updateMe,
+  updateUserById,
 } from '../controllers/userController.js';
 import {
   authLimiter,
@@ -33,15 +36,24 @@ router.route('/forgotPassword').post(authLimiter, forgotPassword);
 router.route('/resetPassword/:token').patch(authLimiter, resetPassword);
 router.route('/verifyEmail/:token').patch(authLimiter, verifyEmail);
 router.route('/revertEmail/:token').patch(authLimiter, revertEmail);
-router.route('/updateMyPassword').patch(authLimiter, protect, updateMyPassword);
-router.route('/updateMyEmail').patch(authLimiter, protect, updateMyEmail);
+
+//as everything below this point is a 'protected' route we can use the protect middleware as a stage for all of the routes below this point and then we will have access to the user object on the req object in all of those routes
+router.use(protect);
+//ALL PROTECTED ROUTES BELOW THIS POINT ---------------------------------------------
+router.route('/updateMyPassword').patch(authLimiter, updateMyPassword);
+router.route('/updateMyEmail').patch(authLimiter, updateMyEmail);
 //this is for changing a name or photo but nothing sensitive like email or password
-router.route('/updateMe').patch(authLimiter, protect, updateMe);
+router.route('/updateMe').patch(authLimiter, updateMe);
+router.route('/deleteMe').delete(authLimiter, softDeleteUser);
+router.route('/me').get(getMe);
 
-router.route('/deleteMe').delete(authLimiter, protect, softDeleteUser);
+//Similarly all the remaining routes should only be accessible to admins so we can use the restrictTo middleware as a stage for all of the routes below this point
+router.use(restrictTo('admin'));
+//ALL ADMIN ONLY ROUTES BELOW THIS POINT --------------------------------------------
+router.route('/').get(getAllUsers).post(createUser);
 router
-  .route('/deleteUser')
-  .delete(protect, restrictTo('admin'), deleteUserById);
-
-router.route('/').get(getAllUsers);
-router.route('/:id').get(getUserById);
+  .route('/:id')
+  .get(getUserById)
+  .patch(updateUserById)
+  .delete(deleteUserById);
+//-----------------------------------------------------------------------------------

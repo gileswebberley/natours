@@ -2,15 +2,9 @@ import User from '../models/userModel.js';
 import AppError from '../utils/appError.js';
 import sendEmail from '../utils/email.js';
 import { filterObj } from '../utils/utilFunctions.js';
-import { deleteOne, getAll, getOne } from './handlerFactory.js';
+import { createOne, deleteOne, getAll, getOne } from './handlerFactory.js';
 
 //handy function to filter out any sneaky injected stuff like setting role:admin when updating can be found in the utils/utilFunctions.js file and simply takes an object and a list of allowed fields and then creates a new object with only those fields in it - this is used in the updateMe controller to filter out any fields that the user is not allowed to change (like role or password)
-
-export const getAllUsers = getAll(User);
-//This is for admin use only (see the deleteUser route in userRoutes)
-export const deleteUserById = deleteOne(User);
-export const getUserById = getOne(User);
-
 //updating password is seperate in general and so we have done that in authController. The obvious risk of being able to change the email has led to several security considerations. I have therefore implemented a safer forgotPassword in authController and I will require the current password to be able to change the email field - let's make the email change a seperate route actually.
 export const updateMe = async (req, res) => {
   if (req.body.password || req.body.passwordConfirm) {
@@ -21,11 +15,11 @@ export const updateMe = async (req, res) => {
     );
   }
 
-  //as we are no longer dealing with sensitive data we can avoid the find-update-save routine, so by-passing the pre-save hook, and simply use one of the compound functions but be careful to filter the data in the req.body to avoid injections. If the email is changed and forgot password is used then the user could be hijacked!? [TODO] Come back and fix this
+  //as we are no longer dealing with sensitive data we can avoid the find-update-save routine, so by-passing the pre-save hook, and simply use one of the compound functions but be careful to filter the data in the req.body to avoid injections. If the email is changed and forgot password is used then the user could be hijacked!?
   const filteredObj = filterObj(req.body, 'name', 'photo');
-  //remember that this will be on a protected route (with protect() as a stage) and so will have the user on the request object. The last argument is the options object which says to pass the new field properties through validation (like isEmail) and to return the newly changed document
+  //remember that this will be on a protected route (with protect() as a stage) and so will have the user on the request object. The last argument is the options object which says to pass the new field properties through validation (like isEmail) and to return the newly changed document. runValidators only works on the fields that are being updated so we don't have to worry that it's going to check the password and so on.
   const updatedUser = await User.findByIdAndUpdate(req.user.id, filteredObj, {
-    new: true,
+    returnDocument: 'after',
     runValidators: true,
   });
 
@@ -52,5 +46,52 @@ export const softDeleteUser = async (req, res) => {
   res.status(204).json({
     status: 'success',
     data: null,
+  });
+};
+
+//as we hold so much sensitive data in the user model we'll create a seperate getMe controller that only returns some of the logged in user's data (keep in mind this will have been through protect() and so has the user on the req object)
+export const getMe = async (req, res) => {
+  //we want a plain object which we can filter, rather than the Mongoose Document object that we get from the database so we could use toObject() or we could add .lean() to the query which is more efficient, or we could just use the select() method to only select the fields we want which is the most effiecient option.
+  const user = await User.findById(req.user.id).select(
+    '-_id name email photo role',
+  );
+  if (!user || user.active === false) {
+    throw new AppError('No user found with that id', 404);
+  }
+  // this is no longer needed as we are using select()
+  // const cleanUser = filterObj(user, 'name', 'email', 'photo', 'role');
+  res.status(200).json({
+    status: 'success',
+    data: {
+      user,
+    },
+  });
+};
+
+//These are for admin use only (see the softDeleteUser which is for 'user' role users to delete themeselves) - we will not be using these routes for signing up normal users as that is handled by the signup controller in authController
+//ALL ADMIN ONLY CONTROLLERS BELOW THIS POINT ----------------------------------------------
+export const getAllUsers = getAll(User);
+export const deleteUserById = deleteOne(User);
+export const getUserById = getOne(User);
+//here we'll create an admin only controller for creating a user with roles that are not the default 'user' role - this is for creating guides and admins from the admin dashboard - we will not be using this route for signing up normal users as that is handled by the signup controller in authController
+export const createUser = createOne(User);
+
+export const updateUserById = async (req, res) => {
+  if (req.body.password || req.body.passwordConfirm) {
+    //this is not the place for password stuff
+    throw new AppError(
+      'This route is not for password updates, please use /updateMyPassword instead',
+      400,
+    );
+  }
+  const updatedUser = await User.findByIdAndUpdate(req.params.id, req.body, {
+    returnDocument: 'after',
+    runValidators: true,
+  });
+  res.status(200).json({
+    status: 'success',
+    data: {
+      user: updatedUser,
+    },
   });
 };
