@@ -64,7 +64,11 @@ export const signup = async (req, res) => {
 };
 
 export const login = async (req, res) => {
-  const { email, password } = req.body;
+  // const { email, password } = req.body;
+  //we'll do these checks to belt-and-braces the validation that we have to avoid any malicious scripts that may have not been caught by the sanitizer in the app.js
+  const email = typeof req.body.email === 'string' ? req.body.email : '';
+  const password =
+    typeof req.body.password === 'string' ? req.body.password : '';
   //check if email and password exists
   if (!email || !password)
     throw new AppError('Please supply an email and password', 400);
@@ -72,14 +76,17 @@ export const login = async (req, res) => {
   //because we have set the password to not be returned by default, by setting select: false in the userModel, we have to add it back into the results here by using the '+password'
   const user = await User.findOne({ email }).select('+password');
   //for safety don't give any information about what was wrong with the login attempt
-  if (!user) throw new AppError('Incorrect email or password', 401);
+  if (!user) {
+    mimicWorkTime(mimicPasswordCheckTimer);
+    throw new AppError('Incorrect email or password', 401);
+  }
   //now because the password returned is the hashed version we need to hash the password supplied in the req.body and compare to that - see the userModel as we are keeping the 'model fat but the controller thin' as discussed in the section about MVC
   //because we have added the instance method to the user model, and because the user variable is in fact a user-document object we can call the method
   const correct = await user.comparePassword(password, user.password);
   //we could do if(!user || !(await user.comparePassword(password, user.password))) instead as if there was no user it would not try the second OR argument and so would not throw an error for password not being a property of user. I prefer it like this though because it is much clearer to me.
   if (!correct) throw new AppError('Incorrect email or password', 401);
 
-  createAndSendToken(user, 201, res);
+  createAndSendToken(user, 200, res);
 };
 
 //we'll create a middleware function to protect routes by verifying the token. The standard way of doing this is to send a request header called authorization (American spelling) with a value of 'Bearer [token]'. Notice we are going to take manual control of the next function by having it as the 3rd arg because this is middleware rather than a 'destination' controller that sends a response

@@ -80,7 +80,7 @@ app.use(
     sql: false, // Set to false as you are using MongoDB
     noSqlLevel: 5, // Highest level of protection
     sanitizeKeys: true, // Also cleans the keys in your JSON objects
-    allowedKeys: ['email', 'password'], // Whitelist fields that need special characters
+    // allowedKeys: ['email', 'password'], // Whitelist fields that need special characters - NO! this basically stops the sanitization from working on the very fields we especially need it!!
   }),
 );
 //now the body has been parsed we need to protect against NoSQL Query Injection (which is mind blowing) - these no longer work as they try to mutate the req.query object which is read-only in Express 5. To fix this we will have to add a hack where we 'unlock the query object'.

@@ -1,9 +1,15 @@
 import rateLimit from 'express-rate-limit';
 
+// const createLimitMessage = (msg) => ({
+//   status: 'fail',
+//   message: msg,
+// });
+
 //general suggested 100 per 15 minutes
 export const globalLimiter = rateLimit({
   max: 100,
   windowMs: 15 * 60 * 1000,
+  statusCode: 429,
   message: {
     status: 'fail',
     message: 'Too many requests, please try again later',
@@ -13,6 +19,7 @@ export const globalLimiter = rateLimit({
 export const authLimiter = rateLimit({
   max: 5,
   windowMs: 30 * 60 * 1000,
+  statusCode: 429,
   message: {
     status: 'fail',
     message:
@@ -23,6 +30,7 @@ export const authLimiter = rateLimit({
 export const signupLimiter = rateLimit({
   max: 10,
   windowMs: 60 * 60 * 1000,
+  statusCode: 429,
   message: {
     status: 'fail',
     message:
@@ -33,6 +41,7 @@ export const signupLimiter = rateLimit({
 export const loginLimiter = rateLimit({
   max: 10,
   windowMs: 30 * 60 * 1000,
+  statusCode: 429,
   message: {
     status: 'fail',
     message:

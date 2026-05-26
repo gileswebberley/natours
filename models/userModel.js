@@ -57,6 +57,7 @@ const userSchema = new mongoose.Schema({
     validate: {
       //Remember this keyword only works on save/create
       validator: function (val) {
+        if (!this.isModified('password')) return true; //if the password is not being modified then we don't need to check that the passwordConfirm matches it, so just return true to pass validation
         return val === this.password;
       },
       message: 'Your password does not match your password confirm',
@@ -67,6 +68,7 @@ const userSchema = new mongoose.Schema({
   //for the forgot password functionality
   passwordResetToken: {
     type: String,
+    select: false,
   },
   passwordResetExpires: Date,
   //for delete user to not actually delete the user but instead hide it in find() queries (see the pre-query hook below)
@@ -78,8 +80,21 @@ const userSchema = new mongoose.Schema({
 });
 
 userSchema.pre('save', async function () {
+  //consolidate the save hooks as one is async and the other is not so it might cause race-conditions
+  if (
+    !this.isNew &&
+    this.isModified('email') &&
+    !this.isModified('emailChangedAt')
+  ) {
+    this.emailChangedAt = Date.now();
+  }
   //first check to see if the password has been changed and if not simply early return
-  if (!this.isModified('password')) return;
+  if (!this.isModified('password')) {
+    // SECURITY FIX: If password is fetched in memory but NOT changed,
+    // tell Mongoose explicitly not to touch it or save it back to avoid the possibility of it being re-hashed and so locking out the user
+    this.unmarkModified('password');
+    return;
+  }
   //now we will hash the password with bcrypt - the 12 is the length of the random string used in hashing which is also refered to as the 'salt rounds'. Of course we are using the non sync method
   this.password = await bcrypt.hash(this.password, 12);
   //as this will execute after the validation we'll get rid of the confirmation - required just means it is required input
@@ -94,17 +109,17 @@ userSchema.pre('save', async function () {
   //   next();
 });
 
-//add in the email change security measures that stop you from being able to forget password after an email change
-userSchema.pre('save', function () {
-  //so a user can change their password after they have used the revert to old email functionality we are going to set the emailChangedAt to undefined in the revertEmail controller
-  if (
-    !this.isNew &&
-    this.isModified('email') &&
-    !this.isModified('emailChangedAt')
-  ) {
-    this.emailChangedAt = Date.now();
-  }
-});
+//add in the email change security measures that stop you from being able to forget password after an email change - now consolidated into the save hook above
+// userSchema.pre('save', function () {
+//   //so a user can change their password after they have used the revert to old email functionality we are going to set the emailChangedAt to undefined in the revertEmail controller
+//   if (
+//     !this.isNew &&
+//     this.isModified('email') &&
+//     !this.isModified('emailChangedAt')
+//   ) {
+//     this.emailChangedAt = Date.now();
+//   }
+// });
 
 userSchema.pre(/^find/, function () {
   this.find({ active: { $ne: false } });

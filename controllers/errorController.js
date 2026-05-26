@@ -2,6 +2,11 @@ import AppError from '../utils/appError.js';
 
 export default (err, req, res, next) => {
   //By specifying four params Express knows it's an error handling middleware - see app.js for how to 'mount' this, essentially at the bottom we have app.use(globalErrorHandler) which is the name this is imported as
+  // Express 5 strictly follows HTTP/2 and modern chunked transfer rules. If an error is thrown or unhandled after your server has already started piping data or headers down to the user client, trying to call res.status() a second time will crash your Node runtime instance with a fatal ERR_HTTP_HEADERS_SENT exception - here's how to check for that
+  if (res.headersSent) {
+    return next(err);
+  }
+
   err.statusCode = err.statusCode || 500;
   err.status = err.status || 'error';
 
@@ -56,7 +61,10 @@ function handleJWTExpiredError(err) {
 
 //we get an object with each validation error as a property of errors
 function handleValidationErrorDB(err) {
-  const errors = Object.values(err.errors).map((e) => e.message);
+  const errors = Object.values(err.errors).map((e) => {
+    if (e.name === 'CastError') return `Invalid ${e.path}: ${e.value}`;
+    return e.message;
+  });
   const message = `Invalid input data: ${errors.join(' and ')}`;
   return new AppError(message, 400);
 }
@@ -69,10 +77,11 @@ function handleCastErrorDB(err) {
 
 // the format of the error object for duplicate field errors has changed since the course and now has a property called keyValue and an index property that seems to relate to the position of this error within that keyValue object
 function handleDuplicateErrorDB(err) {
-  const keyVal = err.keyValue; //['keyValue'];
-  const keyValName = Object.keys(keyVal)[err.index];
-  const keyValValue = Object.values(keyVal)[err.index];
-  const message = `There is already a unique ${keyValName} with the value of ${keyValValue}, please use a different ${keyValName}`;
+  const [key, value] = Object.entries(err.keyValue)[0] || ['field', 'value'];
+  //using entries instead as the err.index MAY not be correct - In modern MongoDB/Mongoose drivers, err.index represents the internal positional index of the database schema index that failed (e.g., 0 for the primary index), not the array index of the key within the err.keyValue object. If err.index evaluates to 1, but your object only contains a single failing unique key like { email: "test@test.com" }, Object.keys(keyVal)[1] will return undefined. Your error message will format out as "...unique undefined with the value of undefined..." or outright crash your server.
+  // const keyValName = Object.keys(keyVal)[err.index];
+  // const keyValValue = Object.values(keyVal)[err.index];
+  const message = `There is already a unique ${key} with the value of ${value}, please use a different ${key}`;
   //409 is the correct status code for duplicate resource or resource already exists
   return new AppError(message, 409);
 }
@@ -99,8 +108,9 @@ function sendErrorProd(err, res) {
   } else {
     console.error('NON OPERATIONAL ERROR: ', err);
     res.status(500).json({
-      status: 'fail',
-      message: 'Unknown error occurred',
+      status: 'error',
+      message:
+        'Creepy-crawly things on our end, many apologies, please try again later',
     });
   }
 }

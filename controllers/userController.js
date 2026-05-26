@@ -14,7 +14,6 @@ export const updateMe = async (req, res) => {
       400,
     );
   }
-
   //as we are no longer dealing with sensitive data we can avoid the find-update-save routine, so by-passing the pre-save hook, and simply use one of the compound functions but be careful to filter the data in the req.body to avoid injections. If the email is changed and forgot password is used then the user could be hijacked!?
   const filteredObj = filterObj(req.body, 'name', 'photo');
   //remember that this will be on a protected route (with protect() as a stage) and so will have the user on the request object. The last argument is the options object which says to pass the new field properties through validation (like isEmail) and to return the newly changed document. runValidators only works on the fields that are being updated so we don't have to worry that it's going to check the password and so on.

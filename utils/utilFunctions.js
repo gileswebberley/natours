@@ -13,5 +13,6 @@ export const filterObj = (obj, ...filters) => {
 };
 
 export const mimicEmailTimer = 800 + Math.random() * 700;
+export const mimicPasswordCheckTimer = 250;
 export const mimicWorkTime = (ms) =>
   new Promise((resolve) => setTimeout(resolve, ms));
