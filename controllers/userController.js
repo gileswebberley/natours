@@ -70,12 +70,6 @@ export const getMe = async (req, res) => {
 
 //These are for admin use only (see the softDeleteUser which is for 'user' role users to delete themeselves) - we will not be using these routes for signing up normal users as that is handled by the signup controller in authController
 //ALL ADMIN ONLY CONTROLLERS BELOW THIS POINT ----------------------------------------------
-export const getAllUsers = getAll(User);
-export const deleteUserById = deleteOne(User);
-export const getUserById = getOne(User);
-//here we'll create an admin only controller for creating a user with roles that are not the default 'user' role - this is for creating guides and admins from the admin dashboard - we will not be using this route for signing up normal users as that is handled by the signup controller in authController
-export const createUser = createOne(User);
-
 export const updateUserById = async (req, res) => {
   if (req.body.password || req.body.passwordConfirm) {
     //this is not the place for password stuff
@@ -95,3 +89,8 @@ export const updateUserById = async (req, res) => {
     },
   });
 };
+export const getAllUsers = getAll(User);
+export const deleteUserById = deleteOne(User);
+export const getUserById = getOne(User);
+//here we'll create an admin only controller for creating a user with roles that are not the default 'user' role - this is for creating guides and admins from the admin dashboard - we will not be using this route for signing up normal users as that is handled by the signup controller in authController
+export const createUser = createOne(User);

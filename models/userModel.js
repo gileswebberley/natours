@@ -19,13 +19,19 @@ const userSchema = new mongoose.Schema({
     trim: true,
     validate: [validator.isEmail, 'The email address is not considered valid'],
   },
-  //we are still working to make sure a user can't be hijacked by changing email and then requesting a forgot password token
+  //we are still working to make sure a user can't be hijacked by changing email and then requesting a forgot password token [TODO] make tokens select:false and double check whether we need to change our find() queries to include them for the password reset and email reset functionality
   pendingEmail: String,
   oldEmail: String,
-  emailResetToken: String,
+  emailResetToken: {
+    type: String,
+    select: false,
+  },
   emailResetExpires: Date,
   emailChangedAt: Date,
-  emailRevertToken: String,
+  emailRevertToken: {
+    type: String,
+    select: false,
+  },
   emailRevertExpires: Date,
   photo: {
     type: String,

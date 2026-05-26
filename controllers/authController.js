@@ -379,6 +379,7 @@ export const updateMyEmail = async (req, res) => {
 //this has been added as there was an obvious security risk to allowing an email to be changed without any checks (ie change email, forgotPassword, reset password = user hijacked)
 export const verifyEmail = async (req, res) => {
   const hashedToken = cryptoHash(req.params.token);
+  //don't worry about the select:false on the emailResetToken as it will still work for the query
   const user = await User.findOne({
     emailResetToken: hashedToken,
     emailResetExpires: { $gt: Date.now() },
