@@ -49,7 +49,7 @@ export const getAll = (Model) => async (req, res) => {
   });
 };
 
-//we have created a virtual populate on our tour model for the reviews that are associated to a tour so we can simply call populate() with the name of the virtual field if populateOptions has been passed in - this allows us to use the same getOne function for both tours and users (which don't have any virtual populates) and also to populate the reviews for a tour without having to create a seperate getTourById function that has the populate() method on it.
+//we have created a virtual populate on our tour model for the reviews that are associated to a tour so we can simply call populate() with the name of the virtual field if populateOptions has been passed in - this allows us to use the same getOne function for both tours and users (which don't have any virtual populates) and also to populate the reviews for a tour without having to create a seperate getTourById function that has the populate() method on it. I have added guides to the populate options for getTourById as well due to the pre-query hook version of doing it is extremely inefficient
 export const getOne = (Model, populateOptions) => async (req, res) => {
   const query = Model.findById(req.params.id);
   if (populateOptions) query.populate(populateOptions);
