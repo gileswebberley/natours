@@ -149,12 +149,12 @@ tourSchema.pre(/^find/, function () {
 //Now that we have added the references to guides in our schema if we wanted to 'populate' the guides field with the actaul users referenced we could do it like this. Be aware that this is a bit of a performance hit so this is for demonstration purposes more than for a production application
 tourSchema.pre(/^find/, function () {
   //add our populate to the end of the query which is available here as the this keyword. We can also specify fields to select/deselect by adding the select property to the options object.
-  if (this.guides) {
-    this.populate({
-      path: 'guides',
-      select: '-__v -passwordChangedAt',
-    });
-  }
+  // if (this.guides) {//This is wrong in the course as the this keyword in pre-query hooks is the query object and not the document object
+  this.populate({
+    path: 'guides',
+    select: '-__v -passwordChangedAt',
+  });
+  // }
 });
 
 //In the post-query hook we have access to all of the documents that have been returned by the query - just a little lesson learnt - I implemented the next(new AppError) replacement for try-catch in getTourById and even when I was throwing an error this still ran and caused an error to be thrown so had to add optional chaining to docs.length to stop it from checking a null object for it's length property.

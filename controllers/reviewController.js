@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import Review from '../models/reviewModel.js';
-import { getAll } from './handlerFactory.js';
+import { deleteOne, getAll, getOne, updateOne } from './handlerFactory.js';
+import AppError from '../utils/appError.js';
 
 //so we can use the factory getAll we'll need a tiny bit of middleware for the possibility of this being a nested route with the tourId in the params
 export const createTourReviewFilter = (req, res, next) => {
@@ -10,8 +11,56 @@ export const createTourReviewFilter = (req, res, next) => {
   next();
 };
 
-export const getAllReviews = getAll(Review);
+//we don't want reviews to be updated so that they seem to be for a different tour or user as that would be dodgy, so we'll add in a check for that in a piece of middleware that we can use in the update route before the updateOne factory function
+export const updateFilter = async (req, res, next) => {
+  if (req.body.tour || req.body.user) {
+    throw new AppError(
+      'The tour and user connected to this review cannot be changed as part of an update',
+      403,
+    );
+  }
+  next();
+};
 
+//check that the user trying to update or delete a review is the one that created it, or an admin
+export const isUsersReview = async (req, res, next) => {
+  const review = await Review.findById(req.params.id);
+  if (!review) {
+    throw new AppError('No review found with that id', 404);
+  }
+  if (review.user !== req.user.id && req.user.role !== 'admin') {
+    throw new AppError(
+      'You do not have permission to perform this action',
+      403,
+    );
+  }
+  next();
+};
+
+//now we can call get all as we have implemented the filtering that is created by createTourReviewFilter to get all but only for a particular tour
+export const getAllReviews = getAll(Review);
+export const getReviewById = getOne(Review);
+export const deleteReview = deleteOne(Review);
+export const updateReview = updateOne(Review);
+
+//so an admin can hide reviews from the public without deleteing them
+export const markReviewAsInappropriate = async (req, res) => {
+  const review = await Review.findByIdAndUpdate(
+    req.params.id,
+    { approved: false },
+    {
+      returnDocument: 'after',
+      runValidators: false,
+    },
+  );
+  if (!review) {
+    throw new AppError('No review found with that id', 404);
+  }
+  res.status(200).json({
+    status: 'success',
+    review,
+  });
+};
 //this is running through the protect middleware in authController and so we have the user object on the req object
 export const createReview = async (req, res) => {
   //we are going to allow this to work with a nested route, seeing as this relates to a tour and we don't want the user to have to add the tour id manually to the req.body we'll check if it has been supplied and if not we'll assume it is in the params
