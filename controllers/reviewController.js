@@ -28,7 +28,10 @@ export const isUsersReview = async (req, res, next) => {
   if (!review) {
     throw new AppError('No review found with that id', 404);
   }
-  if (review.user !== req.user.id && req.user.role !== 'admin') {
+  // console.log(
+  //   `User _id: ${review.user._id} and request user id: ${req.user.id}`,
+  // );
+  if (review.user._id.toString() !== req.user.id && req.user.role !== 'admin') {
     throw new AppError(
       'You do not have permission to perform this action',
       403,
