@@ -25,8 +25,11 @@ export const aliasTopTours = (req, res, next) => {
 export const getAllTours = getAll(Tour);
 export const updateTour = updateOne(Tour);
 export const deleteTour = deleteOne(Tour);
-//because of the virtual populate for reviews on the tour model we simply pass in the name of the virtual field as the second optional argument
-export const getTourById = getOne(Tour, { path: 'reviews' });
+//because of the virtual populate for reviews on the tour model we simply pass in the name of the virtual field as the second optional argument. As I am removing the population of guides from the pre-query hook in the tour model for performance reasons we can pass an array of populate options
+export const getTourById = getOne(Tour, [
+  { path: 'guides', select: '-__v -passwordChangedAt' },
+  { path: 'reviews' },
+]);
 
 export const createTour = createOne(Tour);
 

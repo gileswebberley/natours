@@ -145,10 +145,11 @@ tourSchema.pre(/^find/, function () {
   this.start = Date.now();
   //   console.log(`start query time: ${this.start}`);
   //consolodate the pre-query hooks into one
-  this.populate({
-    path: 'guides',
-    select: '-__v -passwordChangedAt',
-  });
+  //this is a populate rather than a virtual populate because it is a one-to-few unlike the reviews which are one-to-many - however it is still inefficient to do this on all queries and should actually be placed directly into controllers that require the guides to be populated, if using a similar approach in a production application you should remove this and only put it in controllers that require it like, perhaps, the getTourById controller. Maybe I could do that now actually...
+  // this.populate({
+  //   path: 'guides',
+  //   select: '-__v -passwordChangedAt',
+  // });
 });
 
 //Now that we have added the references to guides in our schema if we wanted to 'populate' the guides field with the actaul users referenced we could do it like this. Be aware that this is a bit of a performance hit so this is for demonstration purposes more than for a production application
