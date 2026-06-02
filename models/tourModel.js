@@ -114,6 +114,10 @@ const tourSchema = new mongoose.Schema(
 tourSchema.index({ startLocation: '2dsphere' });
 //this won't work because the locations all have an _id field - notice the more specific path to the coordinates field, this is because as it was an array of locations (rather than the single startLocation which worked fine) it was struggling to see the locations as GeoJSON objects and so failing to create the index. After days of going back and forth I discovered this trick to make sure it could find it's way to the data that needed indexing.
 tourSchema.index({ 'locations.coordinates': '2dsphere' });
+//apparently we will also be querying the 'slug' regularly so we should index that too for performance and efficiency reasons
+tourSchema.index({ slug: 1 });
+//and a compound index that is recommended by Jonas in the course is -
+tourSchema.index({ price: 1, ratingsAverage: -1 });
 
 //As an example of how to create virtual properties....
 tourSchema.virtual('durationInWeeks').get(function () {
