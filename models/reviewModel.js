@@ -40,15 +40,16 @@ const reviewSchema = new mongoose.Schema(
 );
 
 //we're creating a populate middleware for the user field in the reviews, however we'll not add in the tour as we are going to make it so that the tour document has a virtual populate for it's reviews and we'll only have them attached to a tour when we get a single tour by id.
-reviewSchema.pre(/^find/, function () {
-  //hide the reviews that have not been disapproved due to illicit content then populate the reviews being careful to remove the userId from the results
+//IMPORTANT GOTCHA - I had the usual /^find/ regExp in here before but it was stopping the post-query hook from triggering. This new regExp now only deals with read queries and so does not malform the query which was stopping the post-query hook from running.
+reviewSchema.pre(/^find$|^findOne$/, function () {
+  //hide the reviews that have not been disapproved due to illicit content then populate the reviews being careful to remove the userId from the results - no that stops the check which allows users to only update or delete their own reviews from working!
   this.find({ approved: { $ne: false } }).populate({
     path: 'user',
-    select: '-_id name photo',
+    select: 'name photo',
   });
 });
 
-//we are now doing the calculations for the ratingsAverage (and quantity) fields in the tours documents by using our first static model method which will utilise the aggregation pipeline and be called when a review is created (by the pre-save hook below)
+//we are now doing the calculations for the ratingsAverage (and quantity) fields in the tours documents by using our first static model method which will utilise the aggregation pipeline and be called when a review is created (by the hooks below)
 reviewSchema.statics.calcRatingsAverage = async function (tourId) {
   //'this' in a static schema method points to the model
   //remember that the aggregation pipeline is defined as an array of stage-objects and returns a Promise. Also remember that the fields are referenced via the string version of their names with the $ prefix
@@ -70,10 +71,10 @@ reviewSchema.statics.calcRatingsAverage = async function (tourId) {
     },
   ]);
   console.log(stats);
-  //now let's put these stats into the tour document
+  //now let's put these stats into the tour document being careful that we have not deleted the last review that exists by using optional chaining and nullish coalescence
   await Tour.findByIdAndUpdate(tourId, {
-    ratingsAverage: stats[0].avgRating,
-    ratingsQuantity: stats[0].numRatings,
+    ratingsAverage: stats[0]?.avgRating ?? 4.5,
+    ratingsQuantity: stats[0]?.numRatings ?? 0,
   });
 };
 
@@ -81,6 +82,17 @@ reviewSchema.statics.calcRatingsAverage = async function (tourId) {
 reviewSchema.post('save', async function () {
   //as explained in my notes we want to call a static method on a model that is instantiated below so we use a property of the document object to reach it instead, and we pass it the current tour that the review document being created refers to
   await this.constructor.calcRatingsAverage(this.tour);
+});
+
+//and of course we need to update these stats when a review is updated or deleted which we do by findByIdAndUpdate/findByIdAndDelete which under the hood rely on findOneAnd... The method shown in the course is actually now deprecated and so we simply use the post-query hook which gives us access to the document. REMEMBER you should have the returnDocument:'after' query option on the updating query
+reviewSchema.post(/^findOneAnd/, async function (doc) {
+  if (!doc || !doc.tour) {
+    console.log('No document found in post-query review hook');
+    return;
+  }
+  //and now in modern mongoose we can call our static method just like we did in our post-save hook but with this.model which is a property of the query object rather than 'this'
+  // console.log(`calc avgs for ${doc.tour}`);
+  await this.model.calcRatingsAverage(doc.tour);
 });
 
 const Review = mongoose.model('Review', reviewSchema);
