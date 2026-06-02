@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import Tour from './tourModel.js';
 //we are using parent referencing to avoid an enourmous possible array from being embedded in the Tour model
 const reviewSchema = new mongoose.Schema(
   {
@@ -40,10 +41,10 @@ const reviewSchema = new mongoose.Schema(
 
 //we're creating a populate middleware for the user field in the reviews, however we'll not add in the tour as we are going to make it so that the tour document has a virtual populate for it's reviews and we'll only have them attached to a tour when we get a single tour by id.
 reviewSchema.pre(/^find/, function () {
-  //hide the reviews that have not been disapproved due to illicit content
+  //hide the reviews that have not been disapproved due to illicit content then populate the reviews being careful to remove the userId from the results
   this.find({ approved: { $ne: false } }).populate({
     path: 'user',
-    select: 'name photo',
+    select: '-_id name photo',
   });
 });
 
@@ -69,6 +70,11 @@ reviewSchema.statics.calcRatingsAverage = async function (tourId) {
     },
   ]);
   console.log(stats);
+  //now let's put these stats into the tour document
+  await Tour.findByIdAndUpdate(tourId, {
+    ratingsAverage: stats[0].avgRating,
+    ratingsQuantity: stats[0].numRatings,
+  });
 };
 
 //and then call this each time a review is saved (which might mean we have to change our handler factory update method?)
