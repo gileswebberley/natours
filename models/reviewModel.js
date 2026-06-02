@@ -47,6 +47,36 @@ reviewSchema.pre(/^find/, function () {
   });
 });
 
+//we are now doing the calculations for the ratingsAverage (and quantity) fields in the tours documents by using our first static model method which will utilise the aggregation pipeline and be called when a review is created (by the pre-save hook below)
+reviewSchema.statics.calcRatingsAverage = async function (tourId) {
+  //'this' in a static schema method points to the model
+  //remember that the aggregation pipeline is defined as an array of stage-objects and returns a Promise. Also remember that the fields are referenced via the string version of their names with the $ prefix
+  const stats = await this.aggregate([
+    //first find all reviews where the tour field is this tourId
+    { $match: { tour: tourId } },
+    {
+      $group: {
+        _id: '$tour',
+        numRatings: { $sum: 1 },
+        avgRating: { $avg: '$rating' },
+      },
+    },
+    //I want to fix the avgRating to one decimal point - we can use an $addFields stage (which overwrites any variables declared without dropping other fields) and in there use the $round operator
+    {
+      $addFields: {
+        avgRating: { $round: ['$avgRating', 1] },
+      },
+    },
+  ]);
+  console.log(stats);
+};
+
+//and then call this each time a review is saved (which might mean we have to change our handler factory update method?)
+reviewSchema.post('save', async function () {
+  //as explained in my notes we want to call a static method on a model that is instantiated below so we use a property of the document object to reach it instead, and we pass it the current tour that the review document being created refers to
+  await this.constructor.calcRatingsAverage(this.tour);
+});
+
 const Review = mongoose.model('Review', reviewSchema);
 
 export default Review;
