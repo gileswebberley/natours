@@ -77,11 +77,11 @@ function handleCastErrorDB(err) {
 
 // the format of the error object for duplicate field errors has changed since the course and now has a property called keyValue and an index property that seems to relate to the position of this error within that keyValue object
 function handleDuplicateErrorDB(err) {
-  const [key, value] = Object.entries(err.keyValue)[0] || ['field', 'value'];
+  const fieldString = Object.keys(err.keyValue).join(' and ');
+  const valueString = Object.values(err.keyValue).join(' and ');
+  // const [key, value] = Object.entries(err.keyValue)[0] || ['field', 'value'];
   //using entries instead as the err.index MAY not be correct - In modern MongoDB/Mongoose drivers, err.index represents the internal positional index of the database schema index that failed (e.g., 0 for the primary index), not the array index of the key within the err.keyValue object. If err.index evaluates to 1, but your object only contains a single failing unique key like { email: "test@test.com" }, Object.keys(keyVal)[1] will return undefined. Your error message will format out as "...unique undefined with the value of undefined..." or outright crash your server.
-  // const keyValName = Object.keys(keyVal)[err.index];
-  // const keyValValue = Object.values(keyVal)[err.index];
-  const message = `There is already a unique ${key} with the value of ${value}, please use a different ${key}`;
+  const message = `There is already a unique ${fieldString} with this value where duplicates are not allowed`;
   //409 is the correct status code for duplicate resource or resource already exists
   return new AppError(message, 409);
 }
