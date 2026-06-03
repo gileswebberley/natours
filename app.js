@@ -20,6 +20,10 @@ const __dirname = path.dirname(__filename);
 
 //export app for server.js to use
 export const app = express();
+//start building the front end with PUG just to get a finished project for now (remember npm i pug)
+app.set('view engine', 'pug');
+//this path.join method saves us from having to worry about how the paths are formed
+app.set('views', path.join(__dirname, 'views'));
 //I have spent a long time making the security features taught in the course work with Express 5 and we should be good now. REMEMBER to treat the req.query object as immutable in the rest of your controllers though as that is the expected behaviour in Express 5 (see the alias route in the tourControllers file for an example of this)
 
 // for parsing queries with for example duration[gte]=5 we need to set the extended option to true, unlike in the course where it worked out of the box
@@ -104,12 +108,17 @@ app.use(
   }),
 );
 
-app.use(express.static(`${__dirname}/public`));
+app.use(express.static(path.join(__dirname, 'public')));
 
 //just as an example of things we can do...
 app.use((req, res, next) => {
   req.requestTime = new Date().toISOString();
   next();
+});
+
+//get the pug stuff rendering
+app.get('/', (req, res) => {
+  res.status(200).render('base');
 });
 // 'mount' our tour router which is now in its own file (in the routes folder) and all of it's handlers (which are known as controllers in the MVC pattern) are in the controllers folder
 app.use('/api/v1/tours', tourRouter);
@@ -117,8 +126,8 @@ app.use('/api/v1/tours', tourRouter);
 app.use('/api/v1/users', userRouter);
 // add in our new reviews route
 app.use('/api/v1/reviews', reviewRouter);
-
-app.all('/{*any}', (req, res, next) => {
+//wildcard routes in Express 5 can no longer be simply '*' but instead we use this (NOT '/:splat*' btw)...
+app.all('/*splat', (req, res, next) => {
   next(new AppError(`${req.originalUrl} cannot be found on this server`, 404));
 });
 
