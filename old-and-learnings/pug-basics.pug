@@ -1,0 +1,19 @@
+doctype html
+html
+    head
+        //- as you can see Pug works with whitespace rather than opening and closing tags
+        //- to interpolate injection and static text we use the #{} syntax
+        title Natours | #{tour}
+        // this comment will be in the outputted html file
+        //- this comment is just for use in the file
+        //- because we have set the express.static to public in app these paths are relative to that folder
+        link(rel='stylesheet' href='css/style.css')
+        link(rel='shortcut icon' type='image/png' href='img/favicon.png')
+
+    body
+        //- in the res.render() we have passed in a variable called tour and so the first simple way to inject that is to use the = sign, this is called 'buffered code' which is just plain javascript
+        h1=tour
+        //- to create 'unbuffered code' which will not be rendered we simply start the line with a - sign like so
+        - const otherUser = 'Jonas'
+        p=user.toUpperCase()
+        p=otherUser

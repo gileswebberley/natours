@@ -1,12 +1,25 @@
 doctype html
 html
+    //- now we're going to convert overview.html into a pug template
     head
-        title Natours
-        // because we have set the express.static to public in app these paths are relative to that folder
+        meta(charset='UTF-8')
+        meta(name="viewport" content="width=device-width, initial-scale=1.0")
+        //- even though the title local variable is set in the render of 'overview' and 'tour' we still have access to it here because those two pages 'extends' this base file
+        title Natours | #{title}
+        link(href="https://fonts.googleapis.com/css?family=Lato:300,300i,700"
+      rel="stylesheet")
         link(rel='stylesheet' href='css/style.css')
         link(rel='shortcut icon' type='image/png' href='img/favicon.png')
+        //- Add Leaflet CSS
+        link(rel='stylesheet' href='https://unpkg.com' integrity='sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=' crossorigin='')
+        //- Add Leaflet JS
+        script(src='https://unpkg.com' integrity='sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=' crossorigin='')
 
     body
-        h1 The Park Camper
-        // comment
-        p some text
+        // HEADER
+        //- to add the header from a seperate file you can simply use the include keyword and the name of the pug file - this is like the opposite of the way we use 'block'
+        include _header
+        // CONTENT
+        block content
+        // FOOTER
+        include _footer

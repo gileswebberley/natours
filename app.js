@@ -1,6 +1,7 @@
 import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { router as viewRouter } from './routes/viewRoutes.js';
 import { router as tourRouter } from './routes/tourRoutes.js';
 import { router as userRouter } from './routes/userRoutes.js';
 import { router as reviewRouter } from './routes/reviewRoutes.js';
@@ -40,12 +41,24 @@ app.use(
       directives: {
         defaultSrc: ["'self'"],
         baseUri: ["'self'"],
-        fontSrc: ["'self'", 'https:', 'data:'],
-        scriptSrc: ["'self'", 'https://*.mapbox.com'], // Allow Mapbox scripts
-        styleSrc: ["'self'", 'https:', "'unsafe-inline'"], // Allow inline styles & external CSS
-        workerSrc: ["'self'", 'data:', 'blob:'], // Needed for Mapbox workers
+        fontSrc: ["'self'", 'https:', 'data:'], //Allow Google fonts
+        scriptSrc: ["'self'", 'https://unpkg.com'], // Allow Leaflet scripts
+        styleSrc: [
+          "'self'",
+          "'unsafe-inline'",
+          'https://unpkg.com',
+          'https://fonts.googleapis.com',
+        ], // Allow inline styles & external CSS
+        workerSrc: ["'self'", 'data:', 'blob:'], // Needed for Leaflet workers
         childSrc: ["'self'", 'blob:'],
-        imgSrc: ["'self'", 'data:', 'blob:'],
+        imgSrc: [
+          "'self'",
+          'data:',
+          'blob:',
+          'https://*.basemaps.cartocdn.com', // For CartoDB maps
+          'https://*.tile.openstreetmap.org', // For standard OpenStreetMap
+          'https://unpkg.com', // For default Leaflet market icons if used
+        ],
         upgradeInsecureRequests: [],
       },
     },
@@ -117,9 +130,8 @@ app.use((req, res, next) => {
 });
 
 //get the pug stuff rendering
-app.get('/', (req, res) => {
-  res.status(200).render('base');
-});
+app.use('/', viewRouter);
+
 // 'mount' our tour router which is now in its own file (in the routes folder) and all of it's handlers (which are known as controllers in the MVC pattern) are in the controllers folder
 app.use('/api/v1/tours', tourRouter);
 // now add in our users route
