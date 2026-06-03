@@ -142,3 +142,67 @@ export const getMonthlyPlan = async (req, res) => {
     },
   });
 };
+
+//get tours within a distance from a point
+export const getToursWithin = async (req, res) => {
+  const { distance, latlng, unit } = req.params;
+  const [lat, lng] = latlng.split(',');
+  //for the radius it requires a specific measurment in radians
+  const radians = unit === 'mi' ? distance / 3963.2 : distance / 6378.1;
+  if (!lat || !lng) {
+    throw new AppError(
+      'Please provide latlng in the correct format: lat,lng',
+      400,
+    );
+  }
+
+  const toursWithin = await Tour.find({
+    startLocation: {
+      $geoWithin: { $centerSphere: [[lng, lat], radians] },
+    },
+  });
+
+  // console.log(`distance: ${distance}, latlng: ${lat},${lng}, unit: ${unit}`);
+  res.status(200).json({
+    status: 'success',
+    results: toursWithin.length,
+    data: toursWithin,
+  });
+};
+
+//get the distance away from a point for all tours
+export const getDistances = async (req, res) => {
+  const { latlng, unit } = req.params;
+  const [lat, lng] = latlng.split(',');
+  if (!lat || !lng) {
+    throw new AppError(
+      'Please provide latlng in the correct format: lat,lng',
+      400,
+    );
+  }
+  //$geoNear must always be the first stage in a geospatial aggregation pipeline
+  //because we have 2 '2dSphere' indexes we have to set the 'key' to which one, in this case startLocation
+  const distances = await Tour.aggregate([
+    {
+      $geoNear: {
+        near: { type: 'Point', coordinates: [+lng, +lat] },
+        distanceField: 'distance',
+        //now you can convert the meters that are returned as distance
+        distanceMultiplier: unit === 'km' ? 0.001 : 0.000621371,
+        key: 'startLocation',
+      },
+    },
+    {
+      $project: {
+        distance: 1,
+        name: 1,
+      },
+    },
+  ]);
+
+  res.status(200).json({
+    status: 'success',
+    results: distances.length,
+    data: distances,
+  });
+};

@@ -177,7 +177,12 @@ tourSchema.post(/^find/, function (docs) {
 
 //add a stage to the aggregate function that hides secret tours from the pipeline
 tourSchema.pre('aggregate', function () {
-  this.pipeline().unshift({ $match: { secretTour: { $ne: true } } });
+  //to ensure the $geoNear is always first
+  const pipeline = this.pipeline();
+  if (pipeline.length === 0 || pipeline[0].$geoNear === undefined) {
+    // console.log('adding secret tour exclusion to the aggregation pipeline');
+    this.pipeline().unshift({ $match: { secretTour: { $ne: true } } });
+  }
 });
 
 //This must be the last line

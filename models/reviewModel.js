@@ -66,7 +66,13 @@ reviewSchema.statics.calcRatingsAverage = async function (tourId) {
         avgRating: { $avg: '$rating' },
       },
     },
-    //I want to fix the avgRating to one decimal point - we can use an $addFields stage (which overwrites any variables declared without dropping other fields) and in there use the $round operator
+    //I want to fix the avgRating to one decimal point - we can use an $addFields stage (which overwrites any variables declared without dropping other fields) and in there use the $round operator. this could also be done like so, but I believe this is the best way, but good to learn about field set option
+    // rating: {
+    //   type: Number,
+    //   min: [1, 'A rating must be at least 1'],
+    //   max: [5, 'A rating can only be a maximum of 5'],
+    //   set: val => {Math.round(val*10)/10;},
+    // },
     {
       $addFields: {
         avgRating: { $round: ['$avgRating', 1] },

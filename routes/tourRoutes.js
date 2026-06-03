@@ -8,6 +8,8 @@ import {
   aliasTopTours,
   getTourStats,
   getMonthlyPlan,
+  getToursWithin,
+  getDistances,
 } from '../controllers/tourController.js';
 import { protect, restrictTo } from '../controllers/authController.js';
 import { router as reviewRouter } from './reviewRoutes.js';
@@ -25,6 +27,14 @@ router.route('/tour-stats').get(getTourStats);
 router
   .route('/tour-plan/:year')
   .get(protect, restrictTo('admin', 'lead-guide', 'guide'), getMonthlyPlan);
+
+//a geospatial query route that uses params to carry the data - so within distance of the latlng point and expressed in unit (mi/km)
+router
+  .route('/tours-within/distance/:distance/latlng/:latlng/unit/:unit')
+  .get(getToursWithin);
+
+//now calculate the distance of each tour from a given point
+router.route('/distances/:latlng/unit/:unit').get(getDistances);
 
 router
   .route('/')
