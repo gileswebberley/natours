@@ -195,8 +195,126 @@
     <section class="section-map">
       <div id="map"></div>
       <script>
-        // mapboxgl.accessToken = now in the .env file as github would not allow it to be committed
+        // mapboxgl.accessToken =
+        //   'pk.eyJ1Ijoiam9uYXNzY2htZWR0bWFubiIsImEiOiJjam54ZmM5N3gwNjAzM3dtZDNxYTVlMnd2In0.ytpI7V7w7cyT1Kq5rT9Z1A';
 
+        // const geojson = {
+        //   type: 'FeatureCollection',
+        //   features: [
+        //     {
+        //       type: 'Feature',
+        //       geometry: {
+        //         type: 'Point',
+        //         coordinates: [-112.987418, 37.198125],
+        //       },
+        //       properties: {
+        //         description: 'Zion Canyon National Park',
+        //       },
+        //     },
+        //     {
+        //       type: 'Feature',
+        //       geometry: {
+        //         type: 'Point',
+        //         coordinates: [-111.376161, 36.86438],
+        //       },
+        //       properties: {
+        //         description: 'Antelope Canyon',
+        //       },
+        //     },
+        //     {
+        //       type: 'Feature',
+        //       geometry: {
+        //         type: 'Point',
+        //         coordinates: [-112.115763, 36.058973],
+        //       },
+        //       properties: {
+        //         description: 'Grand Canyon National Park',
+        //       },
+        //     },
+        //     {
+        //       type: 'Feature',
+        //       geometry: {
+        //         type: 'Point',
+        //         coordinates: [-116.107963, 34.011646],
+        //       },
+        //       properties: {
+        //         description: 'Joshua Tree National Park',
+        //       },
+        //     },
+        //   ],
+        // };
+
+        // const map = new mapboxgl.Map({
+        //   container: 'map',
+        //   style: 'mapbox://styles/jonasschmedtmann/cjnxfn3zk7bj52rpegdltx58h',
+        //   scrollZoom: false,
+        // });
+
+        // const bounds = new mapboxgl.LngLatBounds();
+
+        // geojson.features.forEach(function (marker) {
+        //   var el = document.createElement('div');
+        //   el.className = 'marker';
+
+        //   new mapboxgl.Marker({
+        //     element: el,
+        //     anchor: 'bottom',
+        //   })
+        //     .setLngLat(marker.geometry.coordinates)
+        //     .addTo(map);
+
+        //   new mapboxgl.Popup({
+        //     offset: 30,
+        //     closeOnClick: false,
+        //   })
+        //     .setLngLat(marker.geometry.coordinates)
+        //     .setHTML('<p>' + marker.properties.description + '</p>')
+        //     .addTo(map);
+
+        //   bounds.extend(marker.geometry.coordinates);
+        // });
+
+        // map.fitBounds(bounds, {
+        //   padding: {
+        //     top: 200,
+        //     bottom: 150,
+        //     left: 50,
+        //     right: 50,
+        //   },
+        // });
+
+        // map.on('load', function () {
+        //   map.addLayer({
+        //     id: 'route',
+        //     type: 'line',
+        //     source: {
+        //       type: 'geojson',
+        //       data: {
+        //         type: 'Feature',
+        //         properties: {},
+        //         geometry: {
+        //           type: 'LineString',
+        //           coordinates: [
+        //             [-112.987418, 37.198125],
+        //             [-111.376161, 36.86438],
+        //             [-112.115763, 36.058973],
+        //             [-116.107963, 34.011646],
+        //           ],
+        //         },
+        //       },
+        //     },
+        //     layout: {
+        //       'line-join': 'round',
+        //       'line-cap': 'round',
+        //     },
+        //     paint: {
+        //       'line-color': '#55c57a',
+        //       'line-opacity': 0.6,
+        //       'line-width': 3,
+        //     },
+        //   });
+        // });
+        //Use Leaflet instead -----------------------------------------------------
         const geojson = {
           type: 'FeatureCollection',
           features: [
@@ -206,19 +324,12 @@
                 type: 'Point',
                 coordinates: [-112.987418, 37.198125],
               },
-              properties: {
-                description: 'Zion Canyon National Park',
-              },
+              properties: { description: 'Zion Canyon National Park' },
             },
             {
               type: 'Feature',
-              geometry: {
-                type: 'Point',
-                coordinates: [-111.376161, 36.86438],
-              },
-              properties: {
-                description: 'Antelope Canyon',
-              },
+              geometry: { type: 'Point', coordinates: [-111.376161, 36.86438] },
+              properties: { description: 'Antelope Canyon' },
             },
             {
               type: 'Feature',
@@ -226,9 +337,7 @@
                 type: 'Point',
                 coordinates: [-112.115763, 36.058973],
               },
-              properties: {
-                description: 'Grand Canyon National Park',
-              },
+              properties: { description: 'Grand Canyon National Park' },
             },
             {
               type: 'Feature',
@@ -236,82 +345,66 @@
                 type: 'Point',
                 coordinates: [-116.107963, 34.011646],
               },
-              properties: {
-                description: 'Joshua Tree National Park',
-              },
+              properties: { description: 'Joshua Tree National Park' },
             },
           ],
         };
 
-        const map = new mapboxgl.Map({
-          container: 'map',
-          style: 'mapbox://styles/jonasschmedtmann/cjnxfn3zk7bj52rpegdltx58h',
-          scrollZoom: false,
+        // 1. Initialise the map (set zoom control to false if you want it clean)
+        const map = L.map('map', {
+          scrollWheelZoom: false,
+          zoomControl: false,
         });
 
-        const bounds = new mapboxgl.LngLatBounds();
+        // 2. Add an open-source tile layer (this styles the map)
+        L.tileLayer('https://{s}://{z}/{x}/{y}{r}.png', {
+          attribution:
+            '&copy; <a href="https://openstreetmap.org">OpenStreetMap</a> contributors &copy; <a href="https://carto.com">CARTO</a>',
+        }).addTo(map);
 
-        geojson.features.forEach(function (marker) {
-          var el = document.createElement('div');
-          el.className = 'marker';
-
-          new mapboxgl.Marker({
-            element: el,
-            anchor: 'bottom',
-          })
-            .setLngLat(marker.geometry.coordinates)
-            .addTo(map);
-
-          new mapboxgl.Popup({
-            offset: 30,
-            closeOnClick: false,
-          })
-            .setLngLat(marker.geometry.coordinates)
-            .setHTML('<p>' + marker.properties.description + '</p>')
-            .addTo(map);
-
-          bounds.extend(marker.geometry.coordinates);
+        // 3. Define the custom green pin icon to match Jonas's styling
+        const greenIcon = L.icon({
+          iconUrl: '/img/pin.png', // Ensure you have a pin image in your public directory
+          iconSize: [32, 40],
+          iconAnchor: [16, 40],
+          popupAnchor: [0, -40],
         });
 
-        map.fitBounds(bounds, {
-          padding: {
-            top: 200,
-            bottom: 150,
-            left: 50,
-            right: 50,
-          },
+        const points = [];
+
+        // 4. Add markers, popups, and track bounds
+        geojson.features.forEach((marker) => {
+          // Reverse the coordinates array because Leaflet uses [lat, lng]
+          const latLng = [
+            marker.geometry.coordinates[1],
+            marker.geometry.coordinates[0],
+          ];
+          points.push(latLng);
+
+          // Create Marker with custom pin and bind a non-closing popup to it
+          L.marker(latLng, { icon: greenIcon })
+            .addTo(map)
+            .bindPopup(`<p>${marker.properties.description}</p>`, {
+              closeButton: false,
+              autoClose: false,
+              closeOnClick: false,
+              className: 'map-popup', // You can style this class in your CSS
+            })
+            .openPopup();
         });
 
-        map.on('load', function () {
-          map.addLayer({
-            id: 'route',
-            type: 'line',
-            source: {
-              type: 'geojson',
-              data: {
-                type: 'Feature',
-                properties: {},
-                geometry: {
-                  type: 'LineString',
-                  coordinates: [
-                    [-112.987418, 37.198125],
-                    [-111.376161, 36.86438],
-                    [-112.115763, 36.058973],
-                    [-116.107963, 34.011646],
-                  ],
-                },
-              },
-            },
-            layout: {
-              'line-join': 'round',
-              'line-cap': 'round',
-            },
-            paint: {
-              'line-color': '#55c57a',
-              'line-opacity': 0.6,
-              'line-width': 3,
-            },
-          });
+        // 5. Draw the connecting route line matching the Natours theme colour (#55c57a)
+        L.polyline(points, {
+          color: '#55c57a',
+          weight: 3,
+          opacity: 0.6,
+          lineJoin: 'round',
+        }).addTo(map);
+
+        // 6. Auto-zoom and pan the map to fit all points perfectly with padding
+        map.fitBounds(points, {
+          paddingTopLeft: [50, 200],
+          paddingBottomRight: [50, 150],
         });
       </script>
     </section>
