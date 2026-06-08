@@ -40,6 +40,8 @@ app.use(
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
+        // Allow connections (fetch, xhr, etc.) to unpkg
+        connectSrc: ["'self'", 'https://unpkg.com'],
         baseUri: ["'self'"],
         fontSrc: ["'self'", 'https:', 'data:'], //Allow Google fonts
         scriptSrc: ["'self'", 'https://unpkg.com'], // Allow Leaflet scripts
