@@ -315,97 +315,97 @@
         //   });
         // });
         //Use Leaflet instead -----------------------------------------------------
-        const geojson = {
-          type: 'FeatureCollection',
-          features: [
-            {
-              type: 'Feature',
-              geometry: {
-                type: 'Point',
-                coordinates: [-112.987418, 37.198125],
-              },
-              properties: { description: 'Zion Canyon National Park' },
-            },
-            {
-              type: 'Feature',
-              geometry: { type: 'Point', coordinates: [-111.376161, 36.86438] },
-              properties: { description: 'Antelope Canyon' },
-            },
-            {
-              type: 'Feature',
-              geometry: {
-                type: 'Point',
-                coordinates: [-112.115763, 36.058973],
-              },
-              properties: { description: 'Grand Canyon National Park' },
-            },
-            {
-              type: 'Feature',
-              geometry: {
-                type: 'Point',
-                coordinates: [-116.107963, 34.011646],
-              },
-              properties: { description: 'Joshua Tree National Park' },
-            },
-          ],
-        };
+        // const geojson = {
+        //   type: 'FeatureCollection',
+        //   features: [
+        //     {
+        //       type: 'Feature',
+        //       geometry: {
+        //         type: 'Point',
+        //         coordinates: [-112.987418, 37.198125],
+        //       },
+        //       properties: { description: 'Zion Canyon National Park' },
+        //     },
+        //     {
+        //       type: 'Feature',
+        //       geometry: { type: 'Point', coordinates: [-111.376161, 36.86438] },
+        //       properties: { description: 'Antelope Canyon' },
+        //     },
+        //     {
+        //       type: 'Feature',
+        //       geometry: {
+        //         type: 'Point',
+        //         coordinates: [-112.115763, 36.058973],
+        //       },
+        //       properties: { description: 'Grand Canyon National Park' },
+        //     },
+        //     {
+        //       type: 'Feature',
+        //       geometry: {
+        //         type: 'Point',
+        //         coordinates: [-116.107963, 34.011646],
+        //       },
+        //       properties: { description: 'Joshua Tree National Park' },
+        //     },
+        //   ],
+        // };
 
-        // 1. Initialise the map (set zoom control to false if you want it clean)
-        const map = L.map('map', {
-          scrollWheelZoom: false,
-          zoomControl: false,
-        });
+        // // 1. Initialise the map (set zoom control to false if you want it clean)
+        // const map = L.map('map', {
+        //   scrollWheelZoom: false,
+        //   zoomControl: false,
+        // });
 
-        // 2. Add an open-source tile layer (this styles the map)
-        L.tileLayer('https://{s}://{z}/{x}/{y}{r}.png', {
-          attribution:
-            '&copy; <a href="https://openstreetmap.org">OpenStreetMap</a> contributors &copy; <a href="https://carto.com">CARTO</a>',
-        }).addTo(map);
+        // // 2. Add an open-source tile layer (this styles the map)
+        // L.tileLayer('https://{s}://{z}/{x}/{y}{r}.png', {
+        //   attribution:
+        //     '&copy; <a href="https://openstreetmap.org">OpenStreetMap</a> contributors &copy; <a href="https://carto.com">CARTO</a>',
+        // }).addTo(map);
 
-        // 3. Define the custom green pin icon to match Jonas's styling
-        const greenIcon = L.icon({
-          iconUrl: '/img/pin.png', // Ensure you have a pin image in your public directory
-          iconSize: [32, 40],
-          iconAnchor: [16, 40],
-          popupAnchor: [0, -40],
-        });
+        // // 3. Define the custom green pin icon to match Jonas's styling
+        // const greenIcon = L.icon({
+        //   iconUrl: '/img/pin.png', // Ensure you have a pin image in your public directory
+        //   iconSize: [32, 40],
+        //   iconAnchor: [16, 40],
+        //   popupAnchor: [0, -40],
+        // });
 
-        const points = [];
+        // const points = [];
 
-        // 4. Add markers, popups, and track bounds
-        geojson.features.forEach((marker) => {
-          // Reverse the coordinates array because Leaflet uses [lat, lng]
-          const latLng = [
-            marker.geometry.coordinates[1],
-            marker.geometry.coordinates[0],
-          ];
-          points.push(latLng);
+        // // 4. Add markers, popups, and track bounds
+        // geojson.features.forEach((marker) => {
+        //   // Reverse the coordinates array because Leaflet uses [lat, lng]
+        //   const latLng = [
+        //     marker.geometry.coordinates[1],
+        //     marker.geometry.coordinates[0],
+        //   ];
+        //   points.push(latLng);
 
-          // Create Marker with custom pin and bind a non-closing popup to it
-          L.marker(latLng, { icon: greenIcon })
-            .addTo(map)
-            .bindPopup(`<p>${marker.properties.description}</p>`, {
-              closeButton: false,
-              autoClose: false,
-              closeOnClick: false,
-              className: 'map-popup', // You can style this class in your CSS
-            })
-            .openPopup();
-        });
+        //   // Create Marker with custom pin and bind a non-closing popup to it
+        //   L.marker(latLng, { icon: greenIcon })
+        //     .addTo(map)
+        //     .bindPopup(`<p>${marker.properties.description}</p>`, {
+        //       closeButton: false,
+        //       autoClose: false,
+        //       closeOnClick: false,
+        //       className: 'map-popup', // You can style this class in your CSS
+        //     })
+        //     .openPopup();
+        // });
 
-        // 5. Draw the connecting route line matching the Natours theme colour (#55c57a)
-        L.polyline(points, {
-          color: '#55c57a',
-          weight: 3,
-          opacity: 0.6,
-          lineJoin: 'round',
-        }).addTo(map);
+        // // 5. Draw the connecting route line matching the Natours theme colour (#55c57a)
+        // L.polyline(points, {
+        //   color: '#55c57a',
+        //   weight: 3,
+        //   opacity: 0.6,
+        //   lineJoin: 'round',
+        // }).addTo(map);
 
-        // 6. Auto-zoom and pan the map to fit all points perfectly with padding
-        map.fitBounds(points, {
-          paddingTopLeft: [50, 200],
-          paddingBottomRight: [50, 150],
-        });
+        // // 6. Auto-zoom and pan the map to fit all points perfectly with padding
+        // map.fitBounds(points, {
+        //   paddingTopLeft: [50, 200],
+        //   paddingBottomRight: [50, 150],
+        // });
       </script>
     </section>
 

@@ -34,7 +34,7 @@ app.set('query parser', 'extended');
 app.set('trust proxy', 1);
 
 //Security HTTP headers supplied by the helmet package. This has changed a lot since the course was developed so it is now neccessary to set the CSP (Content Security Policy) manually
-// A common configuration for Natours with Mapbox/external fonts from Gemini
+// A common configuration for Natours for use with Leaflet and Google fonts
 app.use(
   helmet({
     contentSecurityPolicy: {
@@ -57,7 +57,6 @@ app.use(
           "'self'",
           'data:',
           'blob:',
-          'https://*.basemaps.cartocdn.com', // For CartoDB maps
           'https://*.tile.openstreetmap.org', // For standard OpenStreetMap
           'https://unpkg.com', // For default Leaflet market icons if used
         ],

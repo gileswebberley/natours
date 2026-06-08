@@ -1,6 +1,17 @@
 extends base
 include _reviewCard
 
+//- so we can add stuff into the head without overwriting the existing head we do this
+block append head
+    //- Add Leaflet CSS
+    link(rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+            integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+            crossorigin="")
+    //- Add Leaflet JS
+    //- Make sure you put this AFTER Leaflet's CSS -->
+    script(src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+            crossorigin="")
+
 //- when you have repeated code with only a few variables that are different you can create a 'mixin' function and then use that in place of the repeated code. Here we are doing it for the details like date, difficulty etc. To place it in the document you simply use the + sign in front of it's name
 mixin overviewBox(icon, label, text)
     .overview-box__detail
@@ -65,7 +76,9 @@ block content
                 img.picture-box__img(src=`/img/tours/${img}`, alt=`${tour.name} ${i + 1}`, class=`picture-box__img--${i + 1}`)
 
     section.section-map
-            #map
+        //- to be able to access the locations data in our tourMap.js file we can add it as a data attribute to the element that will contain the map. We have to stringify it first and then parse it in the tourMap.js file
+        #map(data-start-location=JSON.stringify(tour.startLocation), data-locations=JSON.stringify(tour.locations))
+    
 
     section.section-reviews
         .reviews
@@ -82,3 +95,5 @@ block content
                 h2.heading-secondary What are you waiting for?
                 p.cta__text= `${tour.duration} days. 1 adventure. Infinite memories. Make it yours today!`
                 button.btn.btn--green.span-all-rows Book tour now!
+    //- we need the map dom to have loaded before we run this script so we put it at the end of the body and not in the head    
+    script(src='/js/tourMap.js')
