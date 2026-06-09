@@ -10,6 +10,8 @@ header.header
         a.nav__el(href='#')
             img.nav__user-img(src="/img/users/default.jpg" alt="User photo")
             span Giles
-        a.nav__el(href='/login') Log In
-        button.nav__el.nav__el--cta Sign Up
+        unless currentPath === '/login'
+            a.nav__el(href='/login') Log In
+        unless currentPath === '/signup'
+            a.nav__el.nav__el--cta(href='/signup') Sign Up
         

@@ -130,6 +130,12 @@ app.use((req, res, next) => {
   next();
 });
 
+//so I can hide buttons when we're on their page, eg /login should not have a login button
+app.use((req, res, next) => {
+  res.locals.currentPath = req.path;
+  next();
+});
+
 //get the pug stuff rendering
 app.use('/', viewRouter);
 

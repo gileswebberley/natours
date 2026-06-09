@@ -1,4 +1,9 @@
 extends base
+//- get our show/hide password field mixin
+include _passwordInput
+
+block append head
+    script(src='/js/passwordInputToggler.js')
 
 block content
     main.main
@@ -12,10 +17,12 @@ block content
                 label.form__label(for='email') Email address
                 input#email.form__input(type='email', placeholder='you@example.com', required, autocomplete='email')
             .form__group
-                label.form__label(for='password') Password (min. 8 characters)
-                input#password.form__input(type='password', placeholder='••••••••', required, autocomplete='new-password', minlength='8')
+                +passwordInput('password', 'password', 'Password (min. 8 characters)')(placeholder='••••••••' autocomplete='new-password' minlength='8')
+                //- label.form__label(for='password') Password (min. 8 characters)
+                //- input#password.form__input(type='password', placeholder='••••••••', required, autocomplete='new-password', minlength='8')
             .form__group.ma-bt-md
-                label.form__label(for='confirm-password') Confirm Password
-                input#confirm-password.form__input(type='password', placeholder='••••••••', required, autocomplete='new-password', minlength='8')
+                +passwordInput('confirm-password', 'password', 'Confirm Password')(placeholder='••••••••' autocomplete='new-password' minlength='8')
+                //- label.form__label(for='confirm-password') Confirm Password
+                //- input#confirm-password.form__input(type='password', placeholder='••••••••', required, autocomplete='new-password', minlength='8')
             .form__group
                 button.btn.btn--green Sign Up
