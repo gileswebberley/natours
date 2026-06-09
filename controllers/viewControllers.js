@@ -24,3 +24,15 @@ export const getTour = async (req, res) => {
     tour,
   });
 };
+
+export const getLoginForm = (req, res) => {
+  res.status(200).render('login', {
+    title: 'Log into your account',
+  });
+};
+
+export const getSignupForm = (req, res) => {
+  res.status(200).render('signup', {
+    title: 'Sign up for Natours',
+  });
+};

@@ -1254,7 +1254,7 @@ body {
   padding: 1.25rem 1.75rem;
   border: none;
   width: 100%;
-  background-color: #fff;
+  /* background-color: #fff; */
   background-color: #f2f2f2;
   border-top: 3px solid transparent;
   border-bottom: 3px solid transparent;
@@ -1280,10 +1280,64 @@ body {
 .form__group:not(:last-child) {
   margin-bottom: 2.5rem;
 }
+/* for implementing a show/hide toggle on password inputs */
+.input-container {
+  position: relative; /* The anchor point for the button */
+  display: flex;
+  width: 100%; /* Inherits width from your parent form column or row */
+}
+
+.input-container input {
+  /* width: 100%; */
+  /* padding-right: 40px; Leaves 40px of "dead space" on the right so text doesn't overlap the icon */
+  /* box-sizing: border-box; */
+  /* pointer-events: none; */
+  flex: 1; /* Takes up all available space in the container */
+}
+
+.input-container .toggleBtn {
+  position: absolute;
+  top: 1.25rem;
+  right: 5px;
+  background: none;
+  border: none;
+  /* padding: 1.25rem 10px; */
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  /* height: 100%; */
+}
+
+.input-container .icon {
+  aspect-ratio: 1 / 1;
+  width: 2.25rem;
+  color: #666;
+  pointer-events: none; /* Makes the icon "unclickable" so the button's click event still works */
+}
+
+/* Hide utility class */
+.input-container .icon--hidden {
+  display: none;
+}
+
+/* State changes: when the button is active, flip the icon visibility */
+.input-container .toggleBtn.is-visible .icon--eye {
+  display: none;
+}
+
+.input-container .toggleBtn.is-visible .icon--eye-slash {
+  display: flex;
+}
+
+/* Hides Edge's redundant native icon */
+.input-container input::-ms-reveal {
+  display: none;
+}
+/* end of show/hide */
 
 .form__label {
   display: block;
-  font-size: 1.6rem;
+  font-size: 1.8rem;
   font-weight: 700;
   margin-bottom: 0.75rem;
 }
