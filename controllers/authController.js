@@ -138,23 +138,19 @@ export const isLoggedIn = async (req, res, next) => {
   //we are using the cookie rather than headers in our front-end pug site
   let token;
   if (req.cookies.jwt) {
-    // we haven't got it in the header so grab it from the cookie that is provided by createAndSendToken()
     token = req.cookies.jwt;
   }
 
   if (!token) {
     return next();
   }
-  //Now, as we are using the old but popular jsonwebtoken package rather than jose we need to use a node utility function so we can carry on working with Promises and the async/await
-  const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
 
-  //We also want to check that the user still actually exists
+  const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
   const checkUser = await User.findById(decoded.id);
   if (!checkUser) {
     return next();
   }
 
-  //and just in case a user has had to change their password since the token was issued we'll create a new instance method in the user model which we can call on the checkUser document returned above (iat is the property of the token payload and is Issued At Timestamp)
   if (checkUser.changedPasswordAfterJwtIssue(decoded.iat)) {
     return next();
   }
