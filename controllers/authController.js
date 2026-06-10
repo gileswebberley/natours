@@ -133,6 +133,36 @@ export const protect = async (req, res, next) => {
   next();
 };
 
+//for conditionally rendering pages we'll just check if a user is logged in - we'll set the res.locals variable which is accessible from pug templates just like when we pass things through in the render() in our view controllers - we do not want to throw any errors in this as it will just be setting the locals user variable if all good
+export const isLoggedIn = async (req, res, next) => {
+  //we are using the cookie rather than headers in our front-end pug site
+  let token;
+  if (req.cookies.jwt) {
+    // we haven't got it in the header so grab it from the cookie that is provided by createAndSendToken()
+    token = req.cookies.jwt;
+  }
+
+  if (!token) {
+    return next();
+  }
+  //Now, as we are using the old but popular jsonwebtoken package rather than jose we need to use a node utility function so we can carry on working with Promises and the async/await
+  const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
+
+  //We also want to check that the user still actually exists
+  const checkUser = await User.findById(decoded.id);
+  if (!checkUser) {
+    return next();
+  }
+
+  //and just in case a user has had to change their password since the token was issued we'll create a new instance method in the user model which we can call on the checkUser document returned above (iat is the property of the token payload and is Issued At Timestamp)
+  if (checkUser.changedPasswordAfterJwtIssue(decoded.iat)) {
+    return next();
+  }
+  //made it through all of the checks so move along the pipeline and add this user to the res.locals
+  res.locals.user = checkUser;
+  next();
+};
+
 // 403 - Forbidden btw
 //Roles manager - a nice use of a closure and the ...rest operator. used in routes
 export const restrictTo = (...roles) => {

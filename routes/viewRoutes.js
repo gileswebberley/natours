@@ -5,6 +5,7 @@ import {
   getSignupForm,
   getTour,
 } from '../controllers/viewControllers.js';
+// import { protect } from '../controllers/authController.js';
 
 export const router = express.Router();
 

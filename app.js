@@ -66,6 +66,12 @@ app.use(
   }),
 );
 
+// make axios available at /js/axios
+app.use(
+  '/js/axios.js',
+  express.static(path.join(__dirname, 'node_modules/axios/dist/esm/axios.js')),
+);
+
 //now let's set up our rate limiters in a seperate file
 //add the global limit to our entire api route
 app.use('/api', globalLimiter);
