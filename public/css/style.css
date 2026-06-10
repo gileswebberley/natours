@@ -641,12 +641,13 @@ body {
   display: grid;
   grid-column-gap: 6rem;
   grid-auto-flow: column;
-  overflow-x: scroll;
+  overflow-x: auto;
   -ms-scroll-snap-type: x mandatory;
   scroll-snap-type: x mandatory;
 }
 .reviews__card {
-  width: 30rem;
+  /* width: 30rem; */
+  width: clamp(280px, 85vw, 30rem);
   padding: 4rem;
   background-color: #f7f7f7;
   border-radius: 3px;

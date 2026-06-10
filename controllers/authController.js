@@ -97,6 +97,9 @@ export const protect = async (req, res, next) => {
     req.headers.authorization.startsWith('Bearer')
   ) {
     token = req.headers.authorization.split(' ')[1];
+  } else if (req.cookies.jwt) {
+    // we haven't got it in the header so grab it from the cookie that is provided by createAndSendToken()
+    token = req.cookies.jwt;
   }
 
   if (!token) {
