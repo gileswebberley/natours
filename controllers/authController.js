@@ -29,10 +29,11 @@ const createAndSendToken = (user, statusCode, res) => {
   const expiresMS = ms(process.env.JWT_EXPIRES_IN);
   const expiresTimestamp = Date.now() + expiresMS;
 
-  //we'll now send a cookie with the token as well
+  //we'll now send a cookie with the token as well. All of these options must be the same in the logout cookie for modern browsers. The sameSite option should be 'lax' for a monolith structure that we have (ie no seperate front end built in React or some such) and 'none' if we want our api available to the seperate front-end. If set to none then secure must be true!!
   const cookieOptions = {
     expires: new Date(expiresTimestamp),
     secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
     httpOnly: true,
   };
   //and add this to the response by using the cookie(name, value, options) method - the name is unique so if you send a new one it will simply replace the cookie that the client has in their browser.
@@ -89,6 +90,20 @@ export const login = async (req, res) => {
   createAndSendToken(user, 200, res);
 };
 
+//now to log out we essentially need to replace the valid cookie we sent with the createAndSendToken with a short lived mock cookie that has the same name and also, since the course was recorded, you need to have all of the other options the same
+export const logout = (req, res) => {
+  res.cookie('jwt', 'mockdata', {
+    expires: new Date(Date.now() + 10 * 1000),
+    secure: process.env.NODE_ENV === 'production',
+    //'lax' is for the monolith structure we are creating with pug templates being served from the same domain, if using it as a backend for a react app or something we should simply rely on the Bearer Token system.
+    sameSite: 'lax',
+    httpOnly: true,
+  });
+  res.status(200).json({
+    status: 'success',
+  });
+};
+
 //we'll create a middleware function to protect routes by verifying the token. The standard way of doing this is to send a request header called authorization (American spelling) with a value of 'Bearer [token]'. Notice we are going to take manual control of the next function by having it as the 3rd arg because this is middleware rather than a 'destination' controller that sends a response
 export const protect = async (req, res, next) => {
   let token;
@@ -136,27 +151,33 @@ export const protect = async (req, res, next) => {
 //for conditionally rendering pages we'll just check if a user is logged in - we'll set the res.locals variable which is accessible from pug templates just like when we pass things through in the render() in our view controllers - we do not want to throw any errors in this as it will just be setting the locals user variable if all good
 export const isLoggedIn = async (req, res, next) => {
   //we are using the cookie rather than headers in our front-end pug site
-  let token;
-  if (req.cookies.jwt) {
-    token = req.cookies.jwt;
-  }
+  try {
+    let token;
+    if (req.cookies.jwt) {
+      token = req.cookies.jwt;
+    }
 
-  if (!token) {
+    if (!token) {
+      return next();
+    }
+
+    const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
+    const checkUser = await User.findById(decoded.id);
+    if (!checkUser) {
+      return next();
+    }
+
+    if (checkUser.changedPasswordAfterJwtIssue(decoded.iat)) {
+      return next();
+    }
+
+    //made it through all of the checks so move along the pipeline and add this user to the res.locals
+    res.locals.user = checkUser;
+    next();
+  } catch (err) {
+    //for when a user logs out to prevent the malformed jwt token error
     return next();
   }
-
-  const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
-  const checkUser = await User.findById(decoded.id);
-  if (!checkUser) {
-    return next();
-  }
-
-  if (checkUser.changedPasswordAfterJwtIssue(decoded.iat)) {
-    return next();
-  }
-  //made it through all of the checks so move along the pipeline and add this user to the res.locals
-  res.locals.user = checkUser;
-  next();
 };
 
 // 403 - Forbidden btw

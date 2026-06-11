@@ -8,7 +8,7 @@ header.header
     nav.nav.nav--user
         //- in our auth controller we have added the middleware to add user to the res.locals object so we can use that here
         if user
-            a.nav__el.nav__el--logout Log out
+            a.nav__el.nav__el--logout Log Out
             a.nav__el(href='#')
                 img.nav__user-img(src=`/img/users/${user.photo || 'default.jpg'}` alt=`photo of ${user.name}`)
                 span= user.name.split(' ')[0]

@@ -5,7 +5,7 @@ async function login(email, password) {
   //   alert({ email, password });
   try {
     const res = await axios.post('/api/v1/users/login', { email, password });
-    console.log(res);
+    // console.log(res);
     showAlert('success', 'You have successfully logged in', 1800);
     //wait for a moment and then redirect to the home page
     window.setTimeout(() => {
@@ -19,7 +19,7 @@ async function login(email, password) {
     showAlert('error', message);
   }
 }
-
+// by adding this script to the head of the login page with type='module' it waits for the form to render and then grabs all of this info
 document.querySelector('.form').addEventListener('submit', (e) => {
   e.preventDefault();
   //   console.log('login called');

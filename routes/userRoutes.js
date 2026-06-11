@@ -10,6 +10,7 @@ import {
   revertEmail,
   updateMyPassword,
   restrictTo,
+  logout,
 } from '../controllers/authController.js';
 import {
   createUser,
@@ -31,6 +32,8 @@ export const router = express.Router();
 
 router.route('/signup').post(signupLimiter, signup);
 router.route('/login').post(loginLimiter, login);
+// to avoid malicious logging out it's apparently modern practise to make this a post request too even though we're not POSTing anything but an empty object
+router.post('/logout', logout);
 router.route('/forgotPassword').post(authLimiter, forgotPassword);
 
 router.route('/resetPassword/:token').patch(authLimiter, resetPassword);

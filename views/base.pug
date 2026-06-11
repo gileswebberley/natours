@@ -11,6 +11,8 @@ html
         rel="stylesheet")
             link(rel='stylesheet' href='/css/style.css')
             link(rel='shortcut icon' type='image/png' href='/img/favicon.png')
+            //- universal logout functionality which is deferred until the dom loads and also doesn't add a listener if there is no logout button currently in the _header
+            script(type='module' src='/js/logout.js')
             
     body
         // HEADER
