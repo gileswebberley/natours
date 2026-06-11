@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
   // for mouse or touchscreen users
   document.addEventListener('mousedown', (event) => {
-    // Find if the clicked element (or its SVG/path parents) is a toggle button
+    // Find if the clicked element (or its SVG/path parents) is a toggle button by using [] as the attribute selector
     const button = event.target.closest('[data-toggle-for]');
     if (!button) return;
     event.preventDefault(); // Prevent default button behavior to keep the focus in the input element

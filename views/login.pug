@@ -4,6 +4,7 @@ include _passwordInput
 
 block append head
     script(src='/js/passwordInputToggler.js')
+    script(type='module' src='/js/login.js' defer)
 
 block content
     main.main
@@ -19,4 +20,3 @@ block content
                     +passwordInput('password', 'password', 'Password')(class='form__input ma-bt-md' placeholder='••••••••' autocomplete='current-password' minlength='8')
                 .form__group
                     button.btn.btn--green Login
-    script(type='module' src='/js/login.js')

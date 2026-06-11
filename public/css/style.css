@@ -91,8 +91,10 @@ body {
   position: fixed;
   top: 0;
   left: 50%;
-  -webkit-transform: translateX(-50%);
-  transform: translateX(-50%);
+  width: min(90dvw, 350px);
+  /* -webkit-transform: translateX(-50%); */
+  /* let's add some animation */
+  transform: translate(-50%, -200%);
   z-index: 9999;
   color: #fff;
   font-size: 1.8rem;
@@ -100,10 +102,16 @@ body {
   text-align: center;
   border-bottom-left-radius: 5px;
   border-bottom-right-radius: 5px;
-  padding: 1.6rem 15rem;
+  padding: 1.6rem 5rem;
   -webkit-box-shadow: 0 2rem 4rem rgba(0, 0, 0, 0.25);
   box-shadow: 0 2rem 4rem rgba(0, 0, 0, 0.25);
+  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
+/* simply add/remove this class to trigger the animation */
+.alert.alert--active {
+  transform: translate(-50%, 0);
+}
+
 .alert--success {
   background-color: #20bf6b;
 }

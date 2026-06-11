@@ -11,6 +11,8 @@ block append head
     //- Make sure you put this AFTER Leaflet's CSS -->
     script(src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
             crossorigin="")
+    //- we need the map dom to have loaded before we run this script so we put it at the end of the body and not in the head - ah no, we can simply add defer as an attribute so it waits for the dom to load first, in fact setting the type to module apparently does the same as defer 
+    script(type='module' src='/js/tourMap.js')
 
 //- when you have repeated code with only a few variables that are different you can create a 'mixin' function and then use that in place of the repeated code. Here we are doing it for the details like date, difficulty etc. To place it in the document you simply use the + sign in front of it's name
 mixin overviewBox(icon, label, text)
@@ -76,7 +78,7 @@ block content
                 img.picture-box__img(src=`/img/tours/${img}`, alt=`${tour.name} ${i + 1}`, class=`picture-box__img--${i + 1}`)
 
     section.section-map
-        //- to be able to access the locations data in our tourMap.js file we can add it as a data attribute to the element that will contain the map. We have to stringify it first and then parse it in the tourMap.js file
+        //- to be able to access the locations data in our tourMap.js file we can add it as a data attribute to the element that will contain the map. We have to stringify it first and then parse it in the tourMap.js file. Be aware that start-location gets cast as startLocation when querying the elements 'dataset' property
         #map(data-start-location=JSON.stringify(tour.startLocation), data-locations=JSON.stringify(tour.locations))
     
 
@@ -96,5 +98,3 @@ block content
                 p.cta__text= `${tour.duration} days. 1 adventure. Infinite memories. Make it yours today!`
                 button.btn.btn--green.span-all-rows Book tour now!
                 //- button.btn.btn--green Book tour now!
-    //- we need the map dom to have loaded before we run this script so we put it at the end of the body and not in the head    
-    script(src='/js/tourMap.js')
