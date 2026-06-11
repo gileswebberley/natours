@@ -11,7 +11,7 @@ export default (err, req, res, next) => {
   err.status = err.status || 'error';
 
   if (process.env.NODE_ENV === 'development') {
-    sendErrorDev(err, res);
+    sendErrorDev(err, req, res);
   } else if (process.env.NODE_ENV === 'production') {
     //check for some of the mongoose errors so we can send simple error messages to the user in production
     //first grab a copy of our err object incase we want to convert it into an AppError
@@ -37,7 +37,7 @@ Mongoose (and standard JavaScript Error objects) typically define properties lik
     if (error.type === 'entity.too.large' || error.statusCode === 413)
       error = handlePayloadTooLargeError(error);
 
-    sendErrorProd(error, res);
+    sendErrorProd(error, req, res);
   }
 };
 
@@ -87,30 +87,41 @@ function handleDuplicateErrorDB(err) {
 }
 
 //remember that function declarations are hoisted with the declaration body, unlike function expressions and arrow functions
-function sendErrorDev(err, res) {
-  //in dev so give all of the details for tracing the errors
-  res.status(err.statusCode).json({
-    status: err.status,
-    error: err,
-    message: err.message,
-    stack: err.stack,
-  });
-}
-
-//In our AppError class we add an isOperational property so we can check if it's one of 'our' errors, otherwise it is an unknown or programming error which we don't want to share with a production user
-function sendErrorProd(err, res) {
-  //in production just send a friendlier message
-  if (err.isOperational) {
+function sendErrorDev(err, req, res) {
+  if (req.originalUrl.match(/^[/]api[/]v/)) {
+    //in dev so give all of the details for tracing the errors
     res.status(err.statusCode).json({
+      status: err.status,
+      error: err,
+      message: err.message,
+      stack: err.stack,
+    });
+  } else {
+    //render the error page if it's not a direct api call
+    res.status(err.statusCode).render('error', {
       status: err.status,
       message: err.message,
     });
+  }
+}
+
+//In our AppError class we add an isOperational property so we can check if it's one of 'our' errors, otherwise it is an unknown or programming error which we don't want to share with a production user
+function sendErrorProd(err, req, res) {
+  const errMsg = err.isOperational
+    ? err.message
+    : 'Creepy-crawly things on our end, many apologies, please try again later';
+  !err.isOperational && console.error('NON OPERATIONAL ERROR: ', err);
+
+  //to now allow us to render an error page with pug we'll check if this is a direct api call and if not we'll render the error page
+  if (req.originalUrl.match(/^[/]api[/]v/)) {
+    res.status(err.statusCode).json({
+      status: err.status,
+      message: errMsg,
+    });
   } else {
-    console.error('NON OPERATIONAL ERROR: ', err);
-    res.status(500).json({
-      status: 'error',
-      message:
-        'Creepy-crawly things on our end, many apologies, please try again later',
+    res.status(err.statusCode).render('error', {
+      status: err.status,
+      message: errMsg,
     });
   }
 }
