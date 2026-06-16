@@ -36,3 +36,10 @@ export const getSignupForm = (req, res) => {
     title: 'Sign up for Natours',
   });
 };
+
+export const resetPassword = (req, res) => {
+  res.status(200).render('resetPassword', {
+    title: 'Reset your password',
+    token: req.params.token,
+  });
+};

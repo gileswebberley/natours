@@ -5,7 +5,7 @@ async function sendPasswordResetEmail(email) {
   try {
     //This is for where the link sent in the email will take you, eg if this is resetPassword we'll end up with a link to {protocol}{host}/resetPassword/{token}
     const resetEndpoint = 'resetPassword';
-    const res = await axios.post('api/v1/users/forgotPassword', {
+    const res = await axios.post('/api/v1/users/forgotPassword', {
       email,
       resetEndpoint,
     });

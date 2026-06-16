@@ -269,8 +269,8 @@ export const forgotPassword = async (req, res) => {
       resetEndpoint || 'api/v1/users/resetPassword'
     ).replace(/^\/|\/$/g, '');
     //We have now set up our email sending function so we'll send a link to the reset route
-    const resetURL = `${req.protocol}://${req.get('host')}/${cleanEndpoint}/${resetToken}`;
-    const message = `Forgot your password? ${resetEndpoint ? 'Please visit this web address to set a new one: ' : 'Submit a PATCH request with your new password and passwordConfirm in the body to:'} ${resetURL} \nPlease note that this link is only valid for 10 minutes \nIf you did not send this password reset request please ignore this email`;
+    const resetUrl = `${req.protocol}://${req.get('host')}/${cleanEndpoint}/${resetToken}`;
+    const message = `Forgot your password? ${resetEndpoint ? 'Please visit this web address to set a new one: ' : 'Submit a PATCH request with your new password and passwordConfirm in the body to:'} ${resetUrl} \nPlease note that this link is only valid for 10 minutes \nIf you did not send this password reset request please ignore this email`;
     //I actually want to send a link to the reset password page that I'll create in pug, I may want to make some options attached to the req.body like an endpoint or something so this can be used with different project structures?
     const html = `
       <div style="font-family: sans-serif; padding: 20px; color: #333;">
