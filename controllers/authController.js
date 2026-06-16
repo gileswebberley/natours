@@ -145,6 +145,8 @@ export const protect = async (req, res, next) => {
   }
   //made it through all of the checks so move along the pipeline and add this user to the request object for the next stage - we will use this in the roles manager function restrictTo()
   req.user = checkUser;
+  //also add it to the locals so we can send view routes through this and pug templates will still have access to the user, just like in our isLoggedIn controller
+  res.locals.user = checkUser;
   next();
 };
 

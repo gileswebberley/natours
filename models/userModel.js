@@ -35,6 +35,7 @@ const userSchema = new mongoose.Schema({
   emailRevertExpires: Date,
   photo: {
     type: String,
+    default: 'default.jpg',
   },
   //add in authorisation with the role field - this should be done manually, at least for the first admin
   role: {

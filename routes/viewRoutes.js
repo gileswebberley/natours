@@ -6,7 +6,6 @@ import {
   getTour,
 } from '../controllers/viewControllers.js';
 import { isLoggedIn } from '../controllers/authController.js';
-// import { protect } from '../controllers/authController.js';
 
 export const router = express.Router();
 
