@@ -216,8 +216,6 @@ export const forgotPassword = async (req, res) => {
     //wait to mimic working
     await mimicWorkTime(mimicEmailTimer);
   } else {
-    //I want to allow an endpoint to be passed in here which we'll use for the link that's sent in an email
-    const resetEndpoint = req.body.resetEndpoint;
     //check if the request is too soon after the initial request and send a response to break out of the function
     if (user.passwordResetExpires) {
       //NO you silly c***
@@ -264,28 +262,25 @@ export const forgotPassword = async (req, res) => {
     const resetToken = user.createPasswordResetToken();
     //because the instance method createPasswordResetToken has added some fields we need to save the user to the database again, but we don't want to go through all of the schema validation
     await user.save({ validateBeforeSave: false });
-    //check whether we've been sent a custom endpoint and if so ensure it has no leading or trailing slashes
-    const cleanEndpoint = (
-      resetEndpoint || 'api/v1/users/resetPassword'
-    ).replace(/^\/|\/$/g, '');
+
     //We have now set up our email sending function so we'll send a link to the reset route
-    const resetURL = `${req.protocol}://${req.get('host')}/${cleanEndpoint}/${resetToken}`;
-    const message = `Forgot your password? ${resetEndpoint ? 'Please visit this web address to set a new one: ' : 'Submit a PATCH request with your new password and passwordConfirm in the body to:'} ${resetURL} \nPlease note that this link is only valid for 10 minutes \nIf you did not send this password reset request please ignore this email`;
+    const resetURL = `${req.protocol}://${req.get('host')}/api/v1/users/resetPassword/${resetToken}`;
+    const message = `Forgot your password? Submit a PATCH request with your new password and passwordConfirm in the body to: ${resetURL} \nPlease note that this link is only valid for 10 minutes \nIf you did not send this password reset request please ignore this email`;
     //I actually want to send a link to the reset password page that I'll create in pug, I may want to make some options attached to the req.body like an endpoint or something so this can be used with different project structures?
-    const html = `
-      <div style="font-family: sans-serif; padding: 20px; color: #333;">
-        <h2>Password Reset Request</h2>
-        <p>${message}</p>
-        <div style="margin: 25px 0;">
-          <a href="${resetUrl}"
-             style="background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">
-             Reset Password
-          </a>
-        </div>
-        <p style="font-size: 12px; color: #666;">If the button doesn't work, copy and paste this link into your browser:</p>
-        <p style="font-size: 12px; color: #007bff;">${resetUrl}</p>
-      </div>
-    `;
+    // const html = `
+    //   <div style="font-family: sans-serif; padding: 20px; color: #333;">
+    //     <h2>Password Reset Request</h2>
+    //     <p>${options.message}</p>
+    //     <div style="margin: 25px 0;">
+    //       <a href="${resetUrl}"
+    //          style="background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">
+    //          Reset Password
+    //       </a>
+    //     </div>
+    //     <p style="font-size: 12px; color: #666;">If the button doesn't work, copy and paste this link into your browser:</p>
+    //     <p style="font-size: 12px; color: #007bff;">${resetUrl}</p>
+    //   </div>
+    // `;
     //because there may be an error when trying to send an email it might throw an error and we will want to clean up the user so the token doesn't exist
     try {
       // console.log('sending reset email');
@@ -293,7 +288,6 @@ export const forgotPassword = async (req, res) => {
         email: user.email,
         subject: 'Your password reset link (expires in 10 minutes)',
         message,
-        html,
       });
     } catch (err) {
       user.set('passwordResetToken', undefined, { strict: false });

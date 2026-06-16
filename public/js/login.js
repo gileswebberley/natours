@@ -25,5 +25,9 @@ document.querySelector('.form').addEventListener('submit', (e) => {
   //   console.log('login called');
   const email = document.getElementById('email').value;
   const password = document.getElementById('password').value;
+  //no need as these are both required and with basic validation
+  // if (!email || !password) {
+  //   showAlert('error', 'Please provide your email and password');
+  // }
   login(email, password);
 });

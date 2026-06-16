@@ -15,7 +15,9 @@ const sendEmail = async (options) => {
     to: options.email,
     subject: options.subject,
     text: options.message,
-    //html
+    //clever trick using the spread operator to dynamically add html if it exists in the options object, it's based on the fact that the spread operator will quietly fail if trying to spread false
+    ...(options.html && { html: options.html }),
+    // html: options.html || '',
   };
   //if you don't add a callback function as the second argument then it returns a promise, async is good for node remember
   const info = await transport.sendMail(mailOptions);

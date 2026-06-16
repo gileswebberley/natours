@@ -5,6 +5,7 @@ include _passwordInput
 block append head
     script(src='/js/passwordInputToggler.js')
     script(type='module' src='/js/login.js' defer)
+    script(type='module' src='/js/forgotPassword.js' defer)
 
 block content
     main.main
@@ -19,4 +20,6 @@ block content
                     //-     input#password.form__input(type='password', placeholder='••••••••', required, autocomplete='current-password', minlength='8')
                     +passwordInput('password', 'password', 'Password')(class='form__input ma-bt-md' placeholder='••••••••' autocomplete='current-password' minlength='8')
                 .form__group
-                    button.btn.btn--green Login
+                    button.btn.btn--green.ma-bt-md Login
+            .form__group
+                button#forgot-pword.btn Forgot Password
