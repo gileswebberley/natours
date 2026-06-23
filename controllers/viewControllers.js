@@ -43,3 +43,9 @@ export const resetPassword = (req, res) => {
     token: req.params.token,
   });
 };
+
+export const getMe = (req, res) => {
+  res.status(200).render('userAccount', {
+    title: 'User Account',
+  });
+};

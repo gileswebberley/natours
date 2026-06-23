@@ -1,0 +1,6 @@
+mixin userMenuItem(link, icon, label, isActive)
+    li(class=`${isActive ? 'side-nav--active' : ''}`)
+        a(href=`${link}`)
+            svg
+                use(xlink:href=`img/icons.svg#icon-${icon}`)
+            | #{label}

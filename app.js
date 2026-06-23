@@ -37,6 +37,8 @@ app.set('trust proxy', 1);
 // A common configuration for Natours for use with Leaflet and Google fonts
 app.use(
   helmet({
+    // Keeps your app secure but tells Firefox to send the domain origin to Leaflet
+    referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
@@ -66,7 +68,7 @@ app.use(
   }),
 );
 
-// make axios available at /js/axios
+// make axios available as ES Modules at /js/axios.js
 app.use(
   '/js/axios.js',
   express.static(path.join(__dirname, 'node_modules/axios/dist/esm/axios.js')),
