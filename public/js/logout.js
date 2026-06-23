@@ -9,20 +9,26 @@ if (logoutBtn) {
   });
 }
 
+const protectedPaths = ['/me'];
+
 const logout = async () => {
   try {
     const res = await axios.post('/api/v1/users/logout', {});
     showAlert('success', 'You have successfully logged out', 1800);
     //wait for a moment and then reload to update the header
     window.setTimeout(() => {
-      //   window.location.replace(window.location.href);
-      //do it so it's smoother and doesn't go through another render
-      const navUser = document.querySelector('.nav--user');
-      if (navUser) {
-        navUser.innerHTML = `
+      if (protectedPaths.includes(window.location.pathname)) {
+        //we're in a protected route so go to home on logout
+        window.location.replace('/');
+      } else {
+        //otherwise simply replace the menu items and stay on the same page, it may cause a layout shift but at least it doesn't go through an entirely new render
+        const navUser = document.querySelector('.nav--user');
+        if (navUser) {
+          navUser.innerHTML = `
           <a class="nav__el" href="/login">Log In</a>
           <a class="nav__el nav__el--cta" href="/signup">Sign Up</a>
         `;
+        }
       }
     }, 2000);
   } catch (err) {

@@ -47,8 +47,8 @@ body {
   background-color: #f7f7f7;
   /* top-bottom left-right */
   padding: clamp(3rem, 4dvh, 7rem) clamp(1rem, 3vw, 6rem);
-  -webkit-box-flex: 1;
-  -ms-flex: 1;
+  /* -webkit-box-flex: 1;
+  -ms-flex: 1; */
   flex: 1;
   position: relative;
   /* display: flex;
@@ -846,13 +846,14 @@ body {
   overflow: hidden;
   -webkit-box-shadow: 0 2.5rem 8rem 2rem rgba(0, 0, 0, 0.07);
   box-shadow: 0 2.5rem 8rem 2rem rgba(0, 0, 0, 0.07);
-  display: -webkit-box;
-  display: -ms-flexbox;
+  /* display: -webkit-box;
+  display: -ms-flexbox; */
   display: flex;
 }
+
 .user-view__menu {
-  -webkit-box-flex: 32rem;
-  -ms-flex: 32rem 0 0px;
+  /* -webkit-box-flex: 32rem;
+  -ms-flex: 32rem 0 0px; */
   flex: 32rem 0 0;
   background-image: -webkit-gradient(
     linear,
@@ -864,9 +865,15 @@ body {
   background-image: linear-gradient(to right bottom, #7dd56f, #28b487);
   padding: 4rem 0;
 }
+/* make the menu move to the top on smaller screens */
+@media only screen and (max-width: 840px) {
+  .user-view {
+    flex-direction: column;
+  }
+}
 .user-view__content {
-  -webkit-box-flex: 1;
-  -ms-flex: 1;
+  /* -webkit-box-flex: 1;
+  -ms-flex: 1; */
   flex: 1;
   padding: 7rem 0;
 }
