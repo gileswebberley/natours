@@ -6,6 +6,8 @@ import {
   getSignupForm,
   getTour,
   resetPassword,
+  revertEmail,
+  verifyEmail,
 } from '../controllers/viewControllers.js';
 import { isLoggedIn, protect } from '../controllers/authController.js';
 
@@ -22,5 +24,9 @@ router.get('/tour/:slug', getTour);
 router.get('/login', getLoginForm);
 
 router.get('/resetPassword/:token', resetPassword);
+
+router.get('/verifyEmail/:token', verifyEmail);
+
+router.get('/revertEmail/:token', revertEmail);
 
 router.get('/signup', getSignupForm);

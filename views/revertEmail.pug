@@ -1,0 +1,13 @@
+extends base
+
+block append head
+    script(type='module' src='/js/revertEmail.js' defer)
+
+block content
+    main.main
+        .login-form
+            h2.heading-secondary.ma-bt-lg Revert The Email Change
+            form.form
+                input#token(type='hidden' value=`${token}`)
+                .form__group
+                    button.btn.btn--green Revert Now

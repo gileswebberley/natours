@@ -44,6 +44,20 @@ export const resetPassword = (req, res) => {
   });
 };
 
+export const verifyEmail = (req, res) => {
+  res.status(200).render('verifyEmail', {
+    title: 'Verify Your Email',
+    token: req.params.token,
+  });
+};
+
+export const revertEmail = (req, res) => {
+  res.status(200).render('revertEmail', {
+    title: 'Secure Your Email',
+    token: req.params.token,
+  });
+};
+
 export const getMe = (req, res) => {
   res.status(200).render('userAccount', {
     title: 'User Account',
