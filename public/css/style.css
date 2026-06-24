@@ -890,12 +890,12 @@ body {
   /* -webkit-box-flex: 1;
   -ms-flex: 1; */
   flex: 1;
-  padding: 7rem 0;
+  padding: clamp(1rem, 7dvh, 7rem) 0;
 }
 .user-view__form-container {
   max-width: 68rem;
   margin: 0 auto;
-  padding: 0 8rem;
+  padding: 0 clamp(1rem, 7dvw, 7rem);
 }
 
 .footer {
@@ -1133,10 +1133,12 @@ body {
 
 .side-nav {
   list-style: none;
+  display: flex;
+  flex-direction: column;
 }
 .side-nav li {
   margin: 1rem 0;
-  border-left: 0 solid #fff;
+  border-left: 4px solid transparent;
   -webkit-transition: all 0.3s;
   transition: all 0.3s;
 }
@@ -1178,7 +1180,7 @@ body {
 }
 
 .admin-nav {
-  margin-top: 5.5rem;
+  margin-top: 5dvh;
 }
 .admin-nav__heading {
   margin: 0 5rem 1.5rem 4rem;
@@ -1187,6 +1189,156 @@ body {
   text-transform: uppercase;
   color: #f2f2f2;
   border-bottom: 1px solid currentColor;
+}
+
+.nav-toggle-checkbox,
+.nav-toggle-button {
+  display: none; /* Keeps hamburger hidden on desktop layouts */
+}
+
+@media only screen and (max-width: 840px) {
+  /* 1. Establish absolute context on the main menu element */
+  .user-view__menu {
+    position: relative;
+    padding: 1.5rem !important;
+  }
+
+  /* 2. Layer the hidden structural click box */
+  .nav-toggle-checkbox {
+    position: absolute;
+    top: 1.5rem;
+    right: 1.5rem;
+    width: 3.5rem;
+    height: 3.5rem;
+    opacity: 0;
+    z-index: 1000;
+    cursor: pointer;
+    display: block;
+  }
+
+  /* 3. Render the visual hamburger alignment block */
+  .nav-toggle-button {
+    display: block;
+    position: absolute;
+    top: 1.5rem;
+    right: 1.5rem;
+    width: 3.5rem;
+    height: 3.5rem;
+    z-index: 999;
+    cursor: pointer;
+  }
+
+  /* 4. Build the core horizontal lines using pseudo-elements */
+  .nav-toggle-icon {
+    position: relative;
+    margin-top: 1.6rem;
+    display: inline-block;
+    width: 2.8rem;
+    height: 2px;
+    background-color: seashell; /* Natours signature light green brand color */
+    transition: all 0.2s;
+  }
+
+  .nav-toggle-icon::before,
+  .nav-toggle-icon::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    width: 2.8rem;
+    height: 2px;
+    background-color: seashell;
+    transition: all 0.2s;
+  }
+  .nav-toggle-icon::before {
+    top: -0.8rem;
+  }
+  .nav-toggle-icon::after {
+    top: 0.8rem;
+  }
+
+  /* ==========================================
+     INTERACTIVE CHECKBOX HACK INTERSECTION
+     ========================================== */
+
+  /* 6. Expand the content module down cleanly upon selection click */
+  .nav-toggle-checkbox:checked ~ .user-view__menu-container {
+    max-height: 600px; /* Large enough clearance box height to fit regular + admin items */
+    opacity: 1;
+  }
+
+  /* 7. Rotate the parallel lines into a closing "X" button */
+  .nav-toggle-checkbox:checked + .nav-toggle-button .nav-toggle-icon {
+    background-color: transparent;
+  }
+  .nav-toggle-checkbox:checked + .nav-toggle-button .nav-toggle-icon::before {
+    top: 0;
+    transform: rotate(135deg);
+  }
+  .nav-toggle-checkbox:checked + .nav-toggle-button .nav-toggle-icon::after {
+    top: 0;
+    transform: rotate(-135deg);
+  }
+
+  /* 5. COLLAPSE AND BLIND THE MAIN CONTAINER */
+  .user-view__menu-container {
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition:
+      max-height 0.4s ease,
+      opacity 0.2s ease;
+    width: 100%;
+    margin-top: 3.5rem; /* Leaves clearance spacing below your hamburger button */
+  }
+
+  /* Restructure admin text titles to flow better on small viewports */
+  .admin-nav__heading {
+    margin-top: 1.5rem;
+    padding-left: 2rem;
+  }
+
+  .side-nav {
+    flex-direction: row; /* Flips list items horizontally */
+    flex-wrap: wrap; /* Allows items to wrap onto a new line if needed */
+    justify-content: center; /* Centers the links across the mobile screen */
+  }
+
+  .side-nav li {
+    margin: 0.5rem 1rem; /* Balances margins around the wrapped items */
+    border-left: none; /* Kills vertical desktop border */
+    border-bottom: 3px solid transparent; /* Replaces it with a bottom border setup */
+  }
+
+  .side-nav--active,
+  .side-nav li:hover {
+    border-left: none !important; /* Disables side border override */
+    border-bottom: 3px solid #fff !important; /* Adds subtle horizontal underline underline on hover/active */
+  }
+
+  /* Adjust directional animations to feel natural in horizontal mode */
+  .side-nav--active a {
+    -webkit-transform: translateY(-2px);
+    transform: translateY(
+      -2px
+    ); /* Shakes slightly upward instead of leftward */
+  }
+
+  .side-nav a:link,
+  .side-nav a:visited {
+    padding: 1rem 2rem; /* Squeezes padding so text blocks don't overflow small screens */
+  }
+
+  .side-nav a:hover,
+  .side-nav a:active {
+    -webkit-transform: translateY(-2px);
+    transform: translateY(
+      -2px
+    ); /* Lifts up slightly on hover instead of pushing right */
+  }
+
+  .side-nav svg {
+    margin-right: 1rem; /* Nudges icons slightly closer to the text for space savings */
+  }
 }
 
 .card-container {

@@ -6,19 +6,23 @@ block content
     main.main
         .user-view
             nav.user-view__menu
-                ul.side-nav
-                    +userMenuItem('#', 'settings', 'Settings', true)
-                    +userMenuItem('#', 'briefcase', 'My Bookings', false)
-                    +userMenuItem('#', 'star', 'My Reviews', false)
-                    +userMenuItem('#', 'credit-card', 'Billing', false)
-                - if(user.role === 'admin')
-                    .admin-nav
-                        h5.admin-nav__heading Admin
-                        ul.side-nav
-                            +userMenuItem('#', 'map', 'Manage Tours', false)
-                            +userMenuItem('#', 'users', 'Manage Users', false)
-                            +userMenuItem('#', 'star', 'Manage Reviews', false)
-                            +userMenuItem('#', 'briefcase', 'Manage Bookings', false)
+                input#nav-toggle.nav-toggle-checkbox(type="checkbox")
+                label.nav-toggle-button(for="nav-toggle")
+                    span.nav-toggle-icon &nbsp;
+                .user-view__menu-container
+                    ul.side-nav
+                        +userMenuItem('#', 'settings', 'Settings', true)
+                        +userMenuItem('#', 'briefcase', 'My Bookings', false)
+                        +userMenuItem('#', 'star', 'My Reviews', false)
+                        +userMenuItem('#', 'credit-card', 'Billing', false)
+                    - if(user.role === 'admin')
+                        .admin-nav
+                            h5.admin-nav__heading Admin
+                            ul.side-nav
+                                +userMenuItem('#', 'map', 'Manage Tours', false)
+                                +userMenuItem('#', 'users', 'Manage Users', false)
+                                +userMenuItem('#', 'star', 'Manage Reviews', false)
+                                +userMenuItem('#', 'briefcase', 'Manage Bookings', false)
 
             .user-view__content
                 .user-view__form-container
