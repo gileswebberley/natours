@@ -18,9 +18,11 @@ import {
   getAllUsers,
   getMe,
   getUserById,
+  resizeAndUploadUserPhoto,
   softDeleteUser,
   updateMe,
   updateUserById,
+  uploadUserPhoto,
 } from '../controllers/userController.js';
 import {
   authLimiter,
@@ -45,8 +47,10 @@ router.use(protect);
 //ALL PROTECTED ROUTES BELOW THIS POINT ---------------------------------------------
 router.route('/updateMyPassword').patch(authLimiter, updateMyPassword);
 router.route('/updateMyEmail').patch(authLimiter, updateMyEmail);
-//this is for changing a name or photo but nothing sensitive like email or password
-router.route('/updateMe').patch(authLimiter, updateMe);
+//this is for changing a name or photo but nothing sensitive like email or password - see the new multer/cloudinary code in userController for how the photo upload is handled (also check out the virtual property we've added to the user model to create a photoUrl property that will work for both local and cloudinary images)
+router
+  .route('/updateMe')
+  .patch(authLimiter, uploadUserPhoto, resizeAndUploadUserPhoto, updateMe);
 router.route('/deleteMe').delete(authLimiter, softDeleteUser);
 router.route('/me').get(getMe);
 

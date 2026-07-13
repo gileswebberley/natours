@@ -45,7 +45,7 @@ reviewSchema.index({ user: 1, tour: 1 }, { unique: true });
 //we're creating a populate middleware for the user field in the reviews, however we'll not add in the tour as we are going to make it so that the tour document has a virtual populate for it's reviews and we'll only have them attached to a tour when we get a single tour by id.
 //IMPORTANT GOTCHA - I had the usual /^find/ regExp in here before but it was stopping the post-query hook from triggering. This new regExp now only deals with read queries and so does not malform the query which was stopping the post-query hook from running.
 reviewSchema.pre(/^find$|^findOne$/, function () {
-  //hide the reviews that have not been disapproved due to illicit content then populate the reviews being careful to remove the userId from the results - no that stops the check which allows users to only update or delete their own reviews from working!
+  //hide the reviews that have not been disapproved due to illicit content then populate the reviews being careful to remove the userId from the results - no that stops the check which allows users to only update or delete their own reviews from working! NOTICE that we cannot use select to get the new photoUrl virtual property here as it is not a real field however by selecting 'photo' we will get the virtual property as well. This is because the virtual property is derived from the real field and so if we don't select the real field then the virtual property will not be available either.
   this.find({ approved: { $ne: false } }).populate({
     path: 'user',
     select: 'name photo',

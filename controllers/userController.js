@@ -1,8 +1,105 @@
+import multer from 'multer';
+import { v2 as cloudinary } from 'cloudinary';
+import sharp from 'sharp';
 import User from '../models/userModel.js';
 import AppError from '../utils/appError.js';
 import sendEmail from '../utils/email.js';
 import { filterObj } from '../utils/utilFunctions.js';
 import { createOne, deleteOne, getAll, getOne } from './handlerFactory.js';
+
+//it's time to integrate image upload and storage on cloudinary - for backwards compatability we'll add a virtual property to the user model called photoUrl (remember to add the ability to delete the cloudinary photo when a user is deleted or changes their photo)
+
+//multer is the middleware that handles multi-part form data (like file uploads), here we set it to keep the file in a buffer in memory and the filter checks that it is an image file
+const multerStorage = multer.memoryStorage();
+const multerFilter = (req, file, cb) => {
+  console.log('multer file:', file);
+  if (file.mimetype.startsWith('image')) {
+    cb(null, true);
+  } else {
+    cb(new AppError('Not an image! Please upload only images.', 400), false);
+  }
+};
+
+export const uploadUserPhoto = multer({
+  storage: multerStorage,
+  fileFilter: multerFilter,
+}).single('photo'); //this is the name property of the form field that we want to handle - it will be available on req.file in the next middleware function
+
+//we'll configure cloudinary with the .env varaibles - simply sign up for a free Cloudinary account and get the cloud name from the dashboard, you then click on 'Get API Keys' to get the key and secret and then put them in your .env file(s)
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+  secure: true, // Forces Cloudinary to generate secure HTTPS URLs
+});
+
+// Intercept the memory buffer, optimize with Sharp, and stream directly to Cloudinary
+export const resizeAndUploadUserPhoto = async (req, res, next) => {
+  // If no file was uploaded, skip straight to the database save middleware
+  if (!req.file) return next();
+
+  try {
+    // FETCH CURRENT USER: Find the old image metadata before overwriting it
+    const currentUser = await User.findById(req.user.id);
+    const oldPhotoPath = currentUser?.photo;
+    // Resize and optimize the raw image buffer using Sharp in memory
+    const optimizedBuffer = await sharp(req.file.buffer)
+      .resize(500, 500)
+      .toFormat('jpeg')
+      .jpeg({ quality: 90 })
+      .toBuffer();
+
+    // Stream the optimized buffer directly into Cloudinary using a Promise
+    const uploadToCloudinary = () => {
+      return new Promise((resolve, reject) => {
+        const cloudStream = cloudinary.uploader.upload_stream(
+          {
+            folder: 'natours/users',
+            public_id: `user-${req.user.id}-${Date.now()}`,
+            format: 'jpeg',
+          },
+          (error, result) => {
+            if (error) return reject(error);
+            resolve(result); // Contains the secure cloud URL
+          },
+        );
+        cloudStream.end(optimizedBuffer);
+      });
+    };
+
+    const uploadResult = await uploadToCloudinary();
+
+    // Overwrite req.body.photo with the secure Cloudinary string URL
+    req.body.photo = uploadResult.secure_url;
+
+    //OLD IMAGE CLEANUP: If the user had a previous custom image, delete it from Cloudinary
+    if (oldPhotoPath && oldPhotoPath.startsWith('http')) {
+      // Example URL: https://cloudinary.com
+      // We need to extract: "natours/users/user-xyz" (the folder path + file name without extension)
+      const urlParts = oldPhotoPath.split('/');
+      const fileNameWithExtension = urlParts.pop(); // e.g., "user-xyz.jpeg"
+      const folderName = urlParts.pop(); // e.g., "users"
+      const rootFolder = urlParts.pop(); // e.g., "natours"
+
+      const publicId = `${rootFolder}/${folderName}/${fileNameWithExtension.split('.')[0]}`;
+
+      // Trigger asynchronous background destruction (don't await it, to keep the response fast)
+      cloudinary.uploader
+        .destroy(publicId, { invalidate: true })
+        .then((result) =>
+          console.log(
+            `Cloudinary Cleanup: ${publicId} deleted successfully.`,
+            result,
+          ),
+        )
+        .catch((err) => console.error('Cloudinary Cleanup Failed:', err));
+    }
+
+    next();
+  } catch (err) {
+    next(err);
+  }
+};
 
 //handy function to filter out any sneaky injected stuff like setting role:admin when updating can be found in the utils/utilFunctions.js file and simply takes an object and a list of allowed fields and then creates a new object with only those fields in it - this is used in the updateMe controller to filter out any fields that the user is not allowed to change (like role or password)
 //updating password is seperate in general and so we have done that in authController. The obvious risk of being able to change the email has led to several security considerations. I have therefore implemented a safer forgotPassword in authController and I will require the current password to be able to change the email field - let's make the email change a seperate route actually.

@@ -16,7 +16,7 @@ header.header
             a.nav__el.nav__el--logout Log Out
             unless currentPath === '/me'
                 a.nav__el(href='/me')
-                    img.nav__user-img(src=`/img/users/${user.photo || 'default.jpg'}` alt=`photo of ${user.name}`)
+                    img.nav__user-img(src=`${user.photoUrl}` alt=`photo of ${user.name}`)
                     span= user.name.split(' ')[0]
         else
             unless currentPath === '/login'

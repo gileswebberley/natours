@@ -5,79 +5,97 @@ import crypto from 'node:crypto';
 import { cryptoHash } from '../utils/utilFunctions.js';
 
 //The schema defines the structure of documents (the 'blueprint') whilst the model creates the collection and provides the interface for working with those documents (like queries and updates)
-const userSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: [true, 'A user must have a name'],
-    trim: true,
-  },
-  email: {
-    type: String,
-    required: [true, 'A user must provide an email address'],
-    lowercase: true,
-    unique: true,
-    trim: true,
-    validate: [validator.isEmail, 'The email address is not considered valid'],
-  },
-  //we are still working to make sure a user can't be hijacked by changing email and then requesting a forgot password token [TODO] make tokens select:false and double check whether we need to change our find() queries to include them for the password reset and email reset functionality
-  pendingEmail: String,
-  oldEmail: String,
-  emailResetToken: {
-    type: String,
-    select: false,
-  },
-  emailResetExpires: Date,
-  emailChangedAt: Date,
-  emailRevertToken: {
-    type: String,
-    select: false,
-  },
-  emailRevertExpires: Date,
-  photo: {
-    type: String,
-    default: 'default.jpg',
-  },
-  //add in authorisation with the role field - this should be done manually, at least for the first admin
-  role: {
-    type: String,
-    enum: ['user', 'guide', 'lead-guide', 'admin'],
-    default: 'user',
-  },
-  password: {
-    type: String,
-    required: [true, 'Please provide a password of at least 8 characters'],
-    minLength: 8,
-    //just in case as bcrypt truncates anything longer than 72 chars
-    maxLength: 72,
-    //let's make sure that we don't share the password in our responses
-    select: false,
-  },
-  passwordConfirm: {
-    type: String,
-    required: [true, 'Please provide a password confirmation'],
-    validate: {
-      //Remember this keyword only works on save/create
-      validator: function (val) {
-        if (!this.isModified('password')) return true; //if the password is not being modified then we don't need to check that the passwordConfirm matches it, so just return true to pass validation
-        return val === this.password;
+const userSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: [true, 'A user must have a name'],
+      trim: true,
+    },
+    email: {
+      type: String,
+      required: [true, 'A user must provide an email address'],
+      lowercase: true,
+      unique: true,
+      trim: true,
+      validate: [
+        validator.isEmail,
+        'The email address is not considered valid',
+      ],
+    },
+    //we are still working to make sure a user can't be hijacked by changing email and then requesting a forgot password token [TODO] make tokens select:false and double check whether we need to change our find() queries to include them for the password reset and email reset functionality
+    pendingEmail: String,
+    oldEmail: String,
+    emailResetToken: {
+      type: String,
+      select: false,
+    },
+    emailResetExpires: Date,
+    emailChangedAt: Date,
+    emailRevertToken: {
+      type: String,
+      select: false,
+    },
+    emailRevertExpires: Date,
+    photo: {
+      type: String,
+      default: 'default.jpg',
+    },
+    //add in authorisation with the role field - this should be done manually, at least for the first admin
+    role: {
+      type: String,
+      enum: ['user', 'guide', 'lead-guide', 'admin'],
+      default: 'user',
+    },
+    password: {
+      type: String,
+      required: [true, 'Please provide a password of at least 8 characters'],
+      minLength: 8,
+      //just in case as bcrypt truncates anything longer than 72 chars
+      maxLength: 72,
+      //let's make sure that we don't share the password in our responses
+      select: false,
+    },
+    passwordConfirm: {
+      type: String,
+      required: [true, 'Please provide a password confirmation'],
+      validate: {
+        //Remember this keyword only works on save/create
+        validator: function (val) {
+          if (!this.isModified('password')) return true; //if the password is not being modified then we don't need to check that the passwordConfirm matches it, so just return true to pass validation
+          return val === this.password;
+        },
+        message: 'Your password does not match your password confirm',
       },
-      message: 'Your password does not match your password confirm',
+    },
+    //just for our final step in the protect middleware function
+    passwordChangedAt: Date,
+    //for the forgot password functionality
+    passwordResetToken: {
+      type: String,
+      select: false,
+    },
+    passwordResetExpires: Date,
+    //for delete user to not actually delete the user but instead hide it in find() queries (see the pre-query hook below)
+    active: {
+      type: Boolean,
+      select: false,
+      default: true,
     },
   },
-  //just for our final step in the protect middleware function
-  passwordChangedAt: Date,
-  //for the forgot password functionality
-  passwordResetToken: {
-    type: String,
-    select: false,
+  {
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
   },
-  passwordResetExpires: Date,
-  //for delete user to not actually delete the user but instead hide it in find() queries (see the pre-query hook below)
-  active: {
-    type: Boolean,
-    select: false,
-    default: true,
-  },
+);
+
+//we'll create a virtual property that will take care of images stored on cloudinary vs images stored locally. This can then be used by our pug templates to display the user image correctly
+userSchema.virtual('photoUrl').get(function () {
+  //if it's a cloudinary link then use that directly, otherwise use the local path to the image
+  if (this.photo && this.photo.startsWith('http')) {
+    return this.photo;
+  }
+  return `/img/users/${this.photo}`;
 });
 
 userSchema.pre('save', async function () {

@@ -61,6 +61,7 @@ app.use(
           'blob:',
           'https://*.tile.openstreetmap.org', // For standard OpenStreetMap
           'https://unpkg.com', // For default Leaflet market icons if used
+          'https://res.cloudinary.com', // For Cloudinary images
         ],
         upgradeInsecureRequests: [],
       },

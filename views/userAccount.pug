@@ -34,15 +34,20 @@ block content
             .user-view__content
                 .user-view__form-container
                     h2.heading-secondary.ma-bt-md Your account settings
+                    //- Without the API we would have -
+                    //- form.form#form-user-data(action='/api/v1/users/updateMe' method='POST' enctype='multipart/form-data')
+                    //- but now we will handle the form submission with JS and send it to the API
                     form.form#form-user-data
                         .form__group
                             label.form__label(for='name') Name
                             input#name.form__input(type='text', value=`${user.name}`, required)
                         .form__group.form__photo-upload
-                            img.form__user-photo(src=`/img/users/${user.photo}`, alt=`${user.name} photo`)
-                            a.btn-text(href='') Choose new photo
+                            img.form__user-photo(src=`${user.photoUrl}`, alt=`${user.name} photo`)
+                            //- note that we have added the 'name' attribute to the input so that multer can find it in the req.body when we send the form data to the server
+                            input#photo.form__upload(type='file' accept='image/*' name='photo')
+                            label(for='photo') Choose new photo
                         .form__group.right
-                            button.btn.btn--small.btn--green Save settings
+                            button#btn-settings.btn.btn--small.btn--green Save settings
                 .line &nbsp;
                 .user-view__form-container
                     h2.heading-secondary.ma-bt-md Email change
