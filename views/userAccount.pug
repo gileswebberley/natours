@@ -5,6 +5,7 @@ block append head
     script(src='/js/passwordInputToggler.js')
     script(type='module' src='/js/updateMe.js' defer)
     script(type='module' src='/js/updateEmail.js' defer)
+    script(type='module' src='/js/updatePassword.js' defer)
 
 block content
 
@@ -56,7 +57,7 @@ block content
                 .line &nbsp;
                 .user-view__form-container
                     h2.heading-secondary.ma-bt-md Password change
-                    form.form#form-user-settings
+                    form.form#form-user-password
                         .form__group
                             +passwordInput('password-current', 'password-current', 'Current Password')(class='form__input ma-bt-md' placeholder='••••••••' autocomplete='current-password' minlength='8')
                         .form__group
