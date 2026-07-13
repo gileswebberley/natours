@@ -16,10 +16,6 @@ async function updatePassword(password, newPassword, newPasswordConfirm) {
       newPasswordConfirm,
     });
     showAlert('success', 'You have successfully updated your password');
-    //wait for a moment and then redirect to the home page
-    // window.setTimeout(() => {
-    //   window.location.replace('/');
-    // }, 2000);
   } catch (error) {
     const message =
       error.response?.data?.message || 'Something unexpected went wrong';
@@ -32,13 +28,18 @@ async function updatePassword(password, newPassword, newPasswordConfirm) {
 
 document
   .querySelector('#form-user-password')
-  .addEventListener('submit', (e) => {
+  .addEventListener('submit', async (e) => {
     e.preventDefault();
+    const btn = document.querySelector('#btn-password');
+    btn.textContent = 'Updating...';
+    btn.disabled = true;
     //   console.log('change password called');
     const password = document.getElementById('password-current').value;
     const newPassword = document.getElementById('password').value;
     const newPasswordConfirm =
       document.getElementById('password-confirm').value;
 
-    updatePassword(password, newPassword, newPasswordConfirm);
+    await updatePassword(password, newPassword, newPasswordConfirm);
+    btn.textContent = 'Save password';
+    btn.disabled = false;
   });

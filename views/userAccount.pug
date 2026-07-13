@@ -53,7 +53,7 @@ block content
                         .form__group.ma-bt-md
                             +passwordInput('password-email', 'password-email', 'Current Password')(class='form__input ma-bt-md' placeholder='••••••••' autocomplete='current-password' minlength='8')
                         .form__group.right
-                            button.btn.btn--small.btn--green Save Email
+                            button#btn-email.btn.btn--small.btn--green Save Email
                 .line &nbsp;
                 .user-view__form-container
                     h2.heading-secondary.ma-bt-md Password change
@@ -62,11 +62,7 @@ block content
                             +passwordInput('password-current', 'password-current', 'Current Password')(class='form__input ma-bt-md' placeholder='••••••••' autocomplete='current-password' minlength='8')
                         .form__group
                             +passwordInput('password', 'password', 'New Password')(class='form__input ma-bt-md' placeholder='••••••••' autocomplete='new-password' minlength='8')
-                            //- label.form__label(for='password') New password
-                            //- input#password.form__input(type='password', placeholder='••••••••', required, minlength='8')
                         .form__group.ma-bt-lg
                             +passwordInput('password-confirm', 'password-confirm', 'Confirm New Password')(class='form__input ma-bt-md' placeholder='••••••••' autocomplete='new-password' minlength='8')
-                            //- label.form__label(for='password-confirm') Confirm password
-                            //- input#password-confirm.form__input(type='password', placeholder='••••••••', required, minlength='8')
                         .form__group.right
-                            button.btn.btn--small.btn--green Save password
+                            button#btn-password.btn.btn--small.btn--green Save password
