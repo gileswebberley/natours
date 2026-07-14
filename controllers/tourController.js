@@ -1,3 +1,4 @@
+import multer from 'multer';
 import Tour from '../models/tourModel.js';
 import APIFeatures from '../utils/apiFeatures.js';
 import AppError from '../utils/appError.js';
@@ -8,6 +9,8 @@ import {
   getOne,
   updateOne,
 } from './handlerFactory.js';
+import { v2 as cloudinary } from 'cloudinary';
+import { multerLimits } from '../utils/multerLimits.js';
 
 //middleware for our first alias route (see tourRoutes as well) - use nullish coalescing operator to avoid trying to spread undefined.
 export const aliasTopTours = (req, res, next) => {
@@ -21,6 +24,34 @@ export const aliasTopTours = (req, res, next) => {
   next();
 };
 
+//Mainly as an example of how it's done we'll implement the possibility of uploading images for a tour. As we have one field in the model called imageCover and another called images that is an array of image urls (min. 3) we will use the multer .fields() method and then we'll create an array of promises which we'll pass to Promise.all() (we've done the single image equivalent in the userController/model/routes)
+//first we set up the multer storage and filter, be aware that there is a Node.js pipe() workflow that is much better for high volume production apps as it streams the file directly to CLoudinary rather than storing any buffers in memory (take a look at this later!). Be aware that the way we're setting this up our axios request will want FormData object with one called 'imageCover' and another three all with the name 'images'
+const multerStorage = multer.memoryStorage();
+const multerFilter = (req, file, cb) => {
+  if (file.mimetype.startsWith('image')) {
+    cb(null, true);
+  } else {
+    cb(new AppError('Not an image! Please upload only images.', 400), false);
+  }
+};
+
+//That's the boilerplate stuff so now we'll use the fields() method which will make req.files available as an object with the field names as keys and the arrays as values (even if it's a single file it will be a single element array!) limits is set to prevent DoS attacks by limiting the number of files and their size (see utils/multerLimits.js)
+export const uploadTourImages = multer({
+  storage: multerStorage,
+  fileFilter: multerFilter,
+  limits: multerLimits,
+}).fields([
+  { name: 'imageCover', maxCount: 1 },
+  { name: 'images', maxCount: 3 },
+]);
+
+//we'll configure cloudinary with the .env varaibles - simply sign up for a free Cloudinary account and get the cloud name from the dashboard, you then click on 'Get API Keys' to get the key and secret and then put them in your .env file(s)
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+  secure: true, // Forces Cloudinary to generate secure HTTPS URLs
+});
 //Implementing factory handler functions - this one is particularly handy because it allows all getAll controllers to use the APIFeatures for sorting, filtering, etc without having to implement all of that logic in each model's controller.
 export const getAllTours = getAll(Tour);
 export const updateTour = updateOne(Tour);

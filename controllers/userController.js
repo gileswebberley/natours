@@ -1,11 +1,18 @@
 import multer from 'multer';
-import { v2 as cloudinary } from 'cloudinary';
+// import { v2 as cloudinary } from 'cloudinary';
+//use the new centralised instance of cloudinary instead
+import { cloudinary, uploadViaBuffer } from '../utils/cloudinaryUtils.js';
+import {
+  getPublicIdFromUrl,
+  rollbackCloudinaryUploads,
+} from '../utils/cloudinaryUtils.js';
 import sharp from 'sharp';
 import User from '../models/userModel.js';
 import AppError from '../utils/appError.js';
 import sendEmail from '../utils/email.js';
 import { filterObj } from '../utils/utilFunctions.js';
 import { createOne, deleteOne, getAll, getOne } from './handlerFactory.js';
+import { multerLimits } from '../utils/multerLimits.js';
 
 //it's time to integrate image upload and storage on cloudinary - for backwards compatability we'll add a virtual property to the user model called photoUrl (remember to add the ability to delete the cloudinary photo when a user is deleted or changes their photo)
 
@@ -23,15 +30,16 @@ const multerFilter = (req, file, cb) => {
 export const uploadUserPhoto = multer({
   storage: multerStorage,
   fileFilter: multerFilter,
+  limits: multerLimits,
 }).single('photo'); //this is the name property of the form field that we want to handle - it will be available on req.file in the next middleware function
 
-//we'll configure cloudinary with the .env varaibles - simply sign up for a free Cloudinary account and get the cloud name from the dashboard, you then click on 'Get API Keys' to get the key and secret and then put them in your .env file(s)
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-  secure: true, // Forces Cloudinary to generate secure HTTPS URLs
-});
+//we'll configure cloudinary with the .env varaibles - simply sign up for a free Cloudinary account and get the cloud name from the dashboard, you then click on 'Get API Keys' to get the key and secret and then put them in your .env file(s) ! We're now using the centralised instance that's created in cloudinaryUtils.js
+// cloudinary.config({
+//   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+//   api_key: process.env.CLOUDINARY_API_KEY,
+//   api_secret: process.env.CLOUDINARY_API_SECRET,
+//   secure: true, // Forces Cloudinary to generate secure HTTPS URLs
+// });
 
 // Intercept the memory buffer, optimize with Sharp, and stream directly to Cloudinary
 export const resizeAndUploadUserPhoto = async (req, res, next) => {
@@ -42,57 +50,27 @@ export const resizeAndUploadUserPhoto = async (req, res, next) => {
     // FETCH CURRENT USER: Find the old image metadata before overwriting it
     const currentUser = await User.findById(req.user.id);
     const oldPhotoPath = currentUser?.photo;
-    // Resize and optimize the raw image buffer using Sharp in memory
-    const optimizedBuffer = await sharp(req.file.buffer)
-      .resize(500, 500)
-      .toFormat('jpeg')
-      .jpeg({ quality: 90 })
-      .toBuffer();
 
-    // Stream the optimized buffer directly into Cloudinary using a Promise
-    const uploadToCloudinary = () => {
-      return new Promise((resolve, reject) => {
-        const cloudStream = cloudinary.uploader.upload_stream(
-          {
-            folder: 'natours/users',
-            public_id: `user-${req.user.id}-${Date.now()}`,
-            format: 'jpeg',
-          },
-          (error, result) => {
-            if (error) return reject(error);
-            resolve(result); // Contains the secure cloud URL
-          },
-        );
-        cloudStream.end(optimizedBuffer);
-      });
-    };
-
-    const uploadResult = await uploadToCloudinary();
+    // set the filenaming and folder for our new buffer upload functionality - check out all of the centralised cloudinaryUtils.js
+    const folderPath = 'natours/users';
+    const userPublicId = `user-${req.user.id}-${Date.now()}`;
+    const secureUrl = await uploadViaBuffer(
+      req.file.buffer,
+      folderPath,
+      userPublicId,
+      { quality: 90, width: 500, height: 500 },
+    );
 
     // Overwrite req.body.photo with the secure Cloudinary string URL
-    req.body.photo = uploadResult.secure_url;
-
+    req.body.photo = secureUrl;
+    //Centralised functionality into cloudinaryUtils.js so we can use them again in tourController
     //OLD IMAGE CLEANUP: If the user had a previous custom image, delete it from Cloudinary
     if (oldPhotoPath && oldPhotoPath.startsWith('http')) {
-      // Example URL: https://cloudinary.com
-      // We need to extract: "natours/users/user-xyz" (the folder path + file name without extension)
-      const urlParts = oldPhotoPath.split('/');
-      const fileNameWithExtension = urlParts.pop(); // e.g., "user-xyz.jpeg"
-      const folderName = urlParts.pop(); // e.g., "users"
-      const rootFolder = urlParts.pop(); // e.g., "natours"
-
-      const publicId = `${rootFolder}/${folderName}/${fileNameWithExtension.split('.')[0]}`;
-
-      // Trigger asynchronous background destruction (don't await it, to keep the response fast)
-      cloudinary.uploader
-        .destroy(publicId, { invalidate: true })
-        .then((result) =>
-          console.log(
-            `Cloudinary Cleanup: ${publicId} deleted successfully.`,
-            result,
-          ),
-        )
-        .catch((err) => console.error('Cloudinary Cleanup Failed:', err));
+      const publicId = getPublicIdFromUrl(oldPhotoPath);
+      if (publicId) {
+        // Trigger asynchronous background destruction (don't await it, to keep the response fast)
+        rollbackCloudinaryUploads([oldPhotoPath]);
+      }
     }
 
     next();
