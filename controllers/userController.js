@@ -1,8 +1,9 @@
 import multer from 'multer';
 // import { v2 as cloudinary } from 'cloudinary';
 //use the new centralised instance of cloudinary instead
-import { cloudinary, uploadViaBuffer } from '../utils/cloudinaryUtils.js';
 import {
+  cloudinary,
+  uploadViaBuffer,
   getPublicIdFromUrl,
   rollbackCloudinaryUploads,
 } from '../utils/cloudinaryUtils.js';

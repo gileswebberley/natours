@@ -102,13 +102,49 @@ export const updateOne = (Model) => async (req, res) => {
 
 //careful with this one as it cannot be undone
 export const deleteOne = (Model) => async (req, res) => {
-  const document = await Model.findByIdAndDelete(req.params.id);
-
-  if (!document)
+  //let's now just check if the document exists once rather than having so many 'trips to the database'
+  const doc = await Model.findById(req.params.id);
+  if (!doc)
     throw new AppError(
       `No ${Model.modelName.toLowerCase()} found to be deleted with id: ${req.params.id}`,
       404,
     );
+  //now we've got images on cloudinary we'll ahve to clear them up as well as simply delete the user or tour - notice these functions have access to the req object as it forms a Closure given it's scope
+  const clearUserImage = () => {
+    if (doc.photo && doc.photo.startsWith('http')) {
+      rollbackCloudinaryUploads([doc.photo]);
+    }
+  };
 
-  res.status(204).send();
+  const clearTourImages = () => {
+    const URLsToClear = [];
+    if (doc.imageCover && doc.imageCover.startsWith('http'))
+      URLsToClear.push(doc.imageCover);
+    if (doc.images && doc.images.length > 0) {
+      doc.images.forEach((img) => {
+        if (img.startsWith('http')) URLsToClear.push(img);
+      });
+    }
+    // Sends all tour image assets to the cloud destruction bucket at once
+    rollbackCloudinaryUploads(URLsToClear);
+  };
+
+  switch (Model.modelName.toLowerCase()) {
+    case 'tour':
+      clearTourImages();
+      break;
+
+    case 'user':
+      clearUserImage();
+      break;
+
+    default:
+      break;
+  }
+  await doc.deleteOne();
+
+  res.status(204).json({
+    status: 'success',
+    data: null,
+  });
 };
