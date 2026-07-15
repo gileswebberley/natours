@@ -1,4 +1,7 @@
 import AppError from '../utils/appError.js';
+//We have limits set on our multer middleware for file uploads in user and tour controllers which can throw specific errors so we'll add them into this error handler
+import multer from 'multer';
+import { multerLimits } from '../utils/multerLimits.js';
 
 export default (err, req, res, next) => {
   //By specifying four params Express knows it's an error handling middleware - see app.js for how to 'mount' this, essentially at the bottom we have app.use(globalErrorHandler) which is the name this is imported as
@@ -36,10 +39,36 @@ Mongoose (and standard JavaScript Error objects) typically define properties lik
     //now we have set size limits in our express.json() and express.urlencoded() body parsers we want to check for them being violated too
     if (error.type === 'entity.too.large' || error.statusCode === 413)
       error = handlePayloadTooLargeError(error);
+    //check to see if it's an error thrown by multer while trying to upload files
+    if (error instanceof multer.MulterError) error = handleMulterErrors(error);
 
     sendErrorProd(error, req, res);
   }
 };
+
+function handleMulterErrors(err) {
+  if (err.code === 'LIMIT_FILE_SIZE') {
+    return new AppError(
+      `[MULTER] File too large to upload. Max file size allowed is ${(multerLimits.fileSize / 1024 / 1024).toFixed(0)}MB`,
+      413,
+    );
+  }
+  if (err.code === 'LIMIT_FILE_COUNT') {
+    return new AppError(
+      `[MULTER] Too many files uploaded, maximum allowed is ${multerLimits.fileCount}.`,
+      413,
+    );
+  }
+  if (err.code === 'LIMIT_UNEXPECTED_FILE') {
+    return new AppError(
+      '[MULTER] Unexpected field name payload. Are you trying to send something from outside our forms?',
+      400,
+    );
+  }
+
+  // Generic fallback for any other structural Multer limits
+  return new AppError(`[MULTER] File upload issue: ${err.message}`, 400);
+}
 
 function handlePayloadTooLargeError(err) {
   return new AppError(

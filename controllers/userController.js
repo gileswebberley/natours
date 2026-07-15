@@ -19,7 +19,7 @@ import { multerLimits } from '../utils/multerLimits.js';
 //multer is the middleware that handles multi-part form data (like file uploads), here we set it to keep the file in a buffer in memory and the filter checks that it is an image file
 const multerStorage = multer.memoryStorage();
 const multerFilter = (req, file, cb) => {
-  console.log('multer file:', file);
+  // console.log('multer file:', file);
   if (file.mimetype.startsWith('image')) {
     cb(null, true);
   } else {
@@ -27,6 +27,7 @@ const multerFilter = (req, file, cb) => {
   }
 };
 
+//we've added the limits property so we have to take care of catching the errors it might throw
 export const uploadUserPhoto = multer({
   storage: multerStorage,
   fileFilter: multerFilter,
