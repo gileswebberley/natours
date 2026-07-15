@@ -26,7 +26,7 @@ block content
     section.section-header
         .header__hero
             .header__hero-overlay &nbsp;
-            img.header__hero-img(src=`/img/tours/${tour.imageCover}`, alt=`${tour.name}`)
+            img.header__hero-img(src=`${tour.imageCoverUrl}`, alt=`${tour.name}`)
 
             .heading-box
                 h1.heading-primary
@@ -59,7 +59,7 @@ block content
                     h2.heading-secondary.ma-bt-lg Your tour guides
                     each guide in tour.guides
                         .overview-box__detail
-                            img.overview-box__img(src=`/img/users/${guide.photo}`, alt=`${guide.name}`)
+                            img.overview-box__img(src=`${guide.photoUrl}`, alt=`${guide.name}`)
                             //- let's use some raw javascript for the conditional that gives us the label
                             - const guideLabel = guide.role.toLowerCase() === 'lead-guide' ? 'Lead Guide' : 'Tour Guide'
                             span.overview-box__label= guideLabel
@@ -73,9 +73,9 @@ block content
 
     section.section-pictures
         //- to be able to access the index in an 'each loop' we can simply define the second parameter. We come across a problem with the number that appears in the class name though, but the workaround is simply to add it via the 'class' attribute as though it were a normal img element
-        each img, i in tour.images
+        each img, i in tour.imageUrls
             .picture-box
-                img.picture-box__img(src=`/img/tours/${img}`, alt=`${tour.name} ${i + 1}`, class=`picture-box__img--${i + 1}`)
+                img.picture-box__img(src=`${img}`, alt=`${tour.name} ${i + 1}`, class=`picture-box__img--${i + 1}`)
 
     section.section-map
         //- to be able to access the locations data in our tourMap.js file we can add it as a data attribute to the element that will contain the map. We have to stringify it first and then parse it in the tourMap.js file. Be aware that start-location gets cast as startLocation when querying the elements 'dataset' property
@@ -91,8 +91,8 @@ block content
         .cta
             .cta__img.cta__img--logo
                 img(src='/img/logo-white.png', alt='Natours logo')
-            img.cta__img.cta__img--1(src=`/img/tours/${tour.images[0]}`, alt='Tour Image 1')
-            img.cta__img.cta__img--2(src=`/img/tours/${tour.images[1]}`, alt='Tour Image 2')
+            img.cta__img.cta__img--1(src=`${tour.imageUrls[0]}`, alt='Tour Image 1')
+            img.cta__img.cta__img--2(src=`${tour.imageUrls[1]}`, alt='Tour Image 2')
             .cta__content
                 h2.heading-secondary What are you waiting for?
                 p.cta__text= `${tour.duration} days. 1 adventure. Infinite memories. Make it yours today!`

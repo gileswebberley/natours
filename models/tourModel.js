@@ -102,6 +102,26 @@ const tourSchema = new mongoose.Schema(
   },
 );
 
+//So we can get images whether they are on the local server or on cloudinary we will create a virtual property that will create, like we have in user, a url which we can refer to in our pug templates.
+//first a little helper function to set their urls conditionally
+const resolveImagePath = (pathString) => {
+  if (!pathString) return null;
+  // If it's a full Cloudinary CDN link, return as-is
+  if (pathString.startsWith('http')) return pathString;
+  // If it's a legacy server file, return the relative path that we've been using up until now
+  return `/img/tours/${pathString}`;
+};
+
+// 3. VIRTUALS FOR HYBRID BACKWARDS COMPATIBILITY
+tourSchema.virtual('imageCoverUrl').get(function () {
+  return resolveImagePath(this.imageCover);
+});
+
+tourSchema.virtual('imageUrls').get(function () {
+  if (!this.images || this.images.length === 0) return [];
+  return this.images.map((img) => resolveImagePath(img));
+});
+
 //so we could run 'near me' run queries, or maybe more specifically aggregation stages, on startLocation or locations we should index these fields accordingly. The aggregation would use something like $geoNear although because we'll have a few indexed we have to provide the key property like so -
 // In your controller aggregation
 // {

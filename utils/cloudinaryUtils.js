@@ -2,6 +2,7 @@ import { v2 as cloudinary } from 'cloudinary';
 import { Readable } from 'stream';
 import { pipeline } from 'stream/promises';
 import sharp from 'sharp';
+import AppError from './appError.js';
 
 // configure Cloudinary when the server initialises - do not import { v2 as cloudinary } from 'cloudinary' anywhere else in the app but instead import the cloudinary instance from this file
 //we'll configure cloudinary with the .env varaibles - simply sign up for a free Cloudinary account and get the cloud name from the dashboard, you then click on 'Get API Keys' to get the key and secret and then put them in your .env file(s)
@@ -141,7 +142,10 @@ export const uploadViaPipeline = async (
         400,
       );
     }
-    throw streamError;
+    throw new AppError(
+      streamError.message || 'An error occurred during image upload.',
+      500,
+    );
   }
 };
 

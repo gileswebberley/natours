@@ -9,7 +9,8 @@ import {
   getOne,
   updateOne,
 } from './handlerFactory.js';
-import { v2 as cloudinary } from 'cloudinary';
+// import { v2 as cloudinary } from 'cloudinary';
+import { cloudinary, uploadViaPipeline } from '../utils/cloudinaryUtils.js'; //the new centralised configured cloudinary instance
 import { multerLimits } from '../utils/multerLimits.js';
 
 //middleware for our first alias route (see tourRoutes as well) - use nullish coalescing operator to avoid trying to spread undefined.
@@ -45,13 +46,56 @@ export const uploadTourImages = multer({
   { name: 'images', maxCount: 3 },
 ]);
 
-//we'll configure cloudinary with the .env varaibles - simply sign up for a free Cloudinary account and get the cloud name from the dashboard, you then click on 'Get API Keys' to get the key and secret and then put them in your .env file(s)
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-  secure: true, // Forces Cloudinary to generate secure HTTPS URLs
-});
+//now we'll try using the pipeline workflow for image uploads to Cloudinary. This is a more efficient way of uploading files as it streams the file directly to Cloudinary rather than storing any buffers in memory. We'll use the new centralised cloudinary instance and the uploadViaBuffer() function from cloudinaryUtils.js. We'll also use Promise.all() to handle multiple image uploads concurrently.
+export const resizeAndUploadTourImages = async (req, res, next) => {
+  if (!req.files || (!req.files.coverImage && !req.files.images)) return next();
+
+  const trackingUrlsToRollback = [];
+
+  try {
+    const timestamp = Date.now();
+    const folderPath = 'natours/tours';
+
+    // A) Process Cover Image with wide landscape dimensions
+    if (req.files.coverImage) {
+      const coverFile = req.files.coverImage[0];
+      const coverPublicId = `tour-${req.params.id || timestamp}-cover`;
+
+      const secureUrl = await uploadViaPipeline(
+        coverFile.buffer,
+        folderPath,
+        coverPublicId,
+        { width: 2000, height: 1333, quality: 90 },
+      );
+      req.body.coverImage = secureUrl;
+      trackingUrlsToRollback.push(secureUrl);
+    }
+
+    // B) Process Secondary Images Concurrently
+    if (req.files.images) {
+      const imagePromises = req.files.images.map((file, index) => {
+        const imgPublicId = `tour-${req.params.id || timestamp}-${index}`;
+        return uploadViaPipeline(file.buffer, folderPath, imgPublicId, {
+          width: 800,
+          height: 600,
+          quality: 85,
+        });
+      });
+
+      const secureUrls = await Promise.all(imagePromises);
+      req.body.images = secureUrls;
+      trackingUrlsToRollback.push(...secureUrls);
+    }
+
+    req.cloudinaryRollbackUrls = trackingUrlsToRollback;
+    next();
+  } catch (err) {
+    console.error('[Tour Upload Error] Initiating asset rollback...');
+    rollbackCloudinaryUploads(trackingUrlsToRollback);
+    next(err);
+  }
+};
+
 //Implementing factory handler functions - this one is particularly handy because it allows all getAll controllers to use the APIFeatures for sorting, filtering, etc without having to implement all of that logic in each model's controller.
 export const getAllTours = getAll(Tour);
 export const updateTour = updateOne(Tour);
