@@ -48,37 +48,34 @@ export const resizeAndUploadUserPhoto = async (req, res, next) => {
   // If no file was uploaded, skip straight to the database save middleware
   if (!req.file) return next();
 
-  try {
-    // FETCH CURRENT USER: Find the old image metadata before overwriting it
-    const currentUser = await User.findById(req.user.id);
-    const oldPhotoPath = currentUser?.photo;
+  // FETCH CURRENT USER: Find the old image metadata before overwriting it, added req.params.id in case this is for updateUserById by using 'short-circuit assignment'
+  const userId = req.params.id || req.user.id;
+  const currentUser = await User.findById(userId);
+  const oldPhotoPath = currentUser?.photo;
 
-    // set the filenaming and folder for our new buffer upload functionality - check out all of the centralised cloudinaryUtils.js
-    const folderPath = 'natours/users';
-    const userPublicId = `user-${req.user.id}-${Date.now()}`;
-    const secureUrl = await uploadViaBuffer(
-      req.file.buffer,
-      folderPath,
-      userPublicId,
-      { quality: 90, width: 500, height: 500 },
-    );
+  // set the filenaming and folder for our new buffer upload functionality - check out all of the centralised cloudinaryUtils.js
+  const folderPath = 'natours/users';
+  const userPublicId = `user-${userId}-${Date.now()}`;
+  const secureUrl = await uploadViaBuffer(
+    req.file.buffer,
+    folderPath,
+    userPublicId,
+    { quality: 90, width: 500, height: 500 },
+  );
 
-    // Overwrite req.body.photo with the secure Cloudinary string URL
-    req.body.photo = secureUrl;
-    //Centralised functionality into cloudinaryUtils.js so we can use them again in tourController
-    //OLD IMAGE CLEANUP: If the user had a previous custom image, delete it from Cloudinary
-    if (oldPhotoPath && oldPhotoPath.startsWith('http')) {
-      const publicId = getPublicIdFromUrl(oldPhotoPath);
-      if (publicId) {
-        // Trigger asynchronous background destruction (don't await it, to keep the response fast)
-        rollbackCloudinaryUploads([oldPhotoPath]);
-      }
+  // Overwrite req.body.photo with the secure Cloudinary string URL
+  req.body.photo = secureUrl;
+  //Centralised functionality into cloudinaryUtils.js so we can use them again in tourController
+  //OLD IMAGE CLEANUP: If the user had a previous custom image, delete it from Cloudinary
+  if (oldPhotoPath && oldPhotoPath.startsWith('http')) {
+    const publicId = getPublicIdFromUrl(oldPhotoPath);
+    if (publicId) {
+      // Trigger asynchronous background destruction (don't await it, to keep the response fast)
+      rollbackCloudinaryUploads([oldPhotoPath]);
     }
-
-    next();
-  } catch (err) {
-    next(err);
   }
+
+  next();
 };
 
 //handy function to filter out any sneaky injected stuff like setting role:admin when updating can be found in the utils/utilFunctions.js file and simply takes an object and a list of allowed fields and then creates a new object with only those fields in it - this is used in the updateMe controller to filter out any fields that the user is not allowed to change (like role or password)
@@ -109,14 +106,21 @@ export const updateMe = async (req, res) => {
 
 //we do not actually delete a user but instead we hide it by setting active to false and then create a pre-find hook that deselects them - this is not good in terms of gdpr and also means that a user that thinks they've deleted their account can't then sign-up with the same (their) email address. The solution, to keep a user in existence for relational integrity (ie if they have bookings associated with the userid then deleting them completely would cause requests to fail) is to anonymise their data
 export const softDeleteUser = async (req, res) => {
+  const user = await User.findById(req.user.id);
+  if (!user) throw new AppError('Cannot find a user to delete', 400);
+  //add in the new photo stuff as new ones are saved to cloudinary and not stored on the server as per the course
+  if (user.photo && user.photo.startsWith('http')) {
+    //clear the user's image out of the cloud storage
+    rollbackCloudinaryUploads([user.photo]);
+  }
   const anonymisedUser = {
     active: false,
     name: 'deleted_user',
-    email: `deleted_${Date.now().getTime()}@natours.com`,
+    email: `deleted_${Date.now()}@natours.com`,
     password: null,
     photo: null,
   };
-  await User.findByIdAndUpdate(req.user.id, anonymisedUser, {
+  await user.updateOne(anonymisedUser, {
     runValidators: false,
   });
   res.status(204).json({

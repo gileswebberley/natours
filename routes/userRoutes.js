@@ -61,6 +61,6 @@ router.route('/').get(getAllUsers).post(createUser);
 router
   .route('/:id')
   .get(getUserById)
-  .patch(updateUserById)
+  .patch(uploadUserPhoto, resizeAndUploadUserPhoto, updateUserById)
   .delete(deleteUserById);
 //-----------------------------------------------------------------------------------
