@@ -35,14 +35,6 @@ export const uploadUserPhoto = multer({
   limits: multerLimits,
 }).single('photo'); //this is the name property of the form field that we want to handle - it will be available on req.file in the next middleware function
 
-//we'll configure cloudinary with the .env varaibles - simply sign up for a free Cloudinary account and get the cloud name from the dashboard, you then click on 'Get API Keys' to get the key and secret and then put them in your .env file(s) ! We're now using the centralised instance that's created in cloudinaryUtils.js
-// cloudinary.config({
-//   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-//   api_key: process.env.CLOUDINARY_API_KEY,
-//   api_secret: process.env.CLOUDINARY_API_SECRET,
-//   secure: true, // Forces Cloudinary to generate secure HTTPS URLs
-// });
-
 // Intercept the memory buffer, optimize with Sharp, and stream directly to Cloudinary
 export const resizeAndUploadUserPhoto = async (req, res, next) => {
   // If no file was uploaded, skip straight to the database save middleware
