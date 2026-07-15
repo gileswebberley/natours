@@ -1,5 +1,6 @@
 import APIFeatures from '../utils/apiFeatures.js';
 import AppError from '../utils/appError.js';
+import { rollbackCloudinaryUploads } from '../utils/cloudinaryUtils.js';
 //The idea is to create some factory functions to do the basic CRUD operations on any model so that we can stick to the DRY principle (Don't Repeat Yourself). The returned functions have access to the Model argument through the closure property of Javascript functions :)
 
 //Remember that if you have non-generic steps in your controllers you can simply factor those out into a seperate piece of middleware and then pass the relevant route through that first
@@ -7,11 +8,16 @@ import AppError from '../utils/appError.js';
 //No point adding a createOne function as they are quite specific to each model - user creation is with sign-up, review creation requires checks for user/tour id and also casting them to ObjectIds, and so the only plain one is for creating a tour and that's only a couple of lines anyway. Actually we'll add an admin only createUser controller so we'll do the createOne function after all.
 export const createOne = (Model) => async (req, res) => {
   const document = await Model.create(req.body);
-  if (!document)
+  if (!document) {
+    //if creating a Tour fails we may have already uploaded images so we'll check for the rollback array and if it's in the req object we'll use our rollback function from cloudinaryUtils
+    if (req.cloudinaryRollbackUrls) {
+      rollbackCloudinaryUploads(req.cloudinaryRollbackUrls);
+    }
     throw new AppError(
       `Failed to create new ${Model.modelName.toLowerCase()}`,
       400,
     );
+  }
 
   res.status(201).json({
     status: 'success',
@@ -76,11 +82,16 @@ export const updateOne = (Model) => async (req, res) => {
     runValidators: true,
   });
 
-  if (!document)
+  if (!document) {
+    //if updating a Tour fails we may have already uploaded images so we'll check for the rollback array and if it's in the req object we'll use our rollback function from cloudinaryUtils
+    if (req.cloudinaryRollbackUrls) {
+      rollbackCloudinaryUploads(req.cloudinaryRollbackUrls);
+    }
     throw new AppError(
       `Failed to update ${Model.modelName.toLowerCase()} with id ${req.params.id}`,
       400,
     );
+  }
   res.status(200).json({
     status: 'success',
     data: {

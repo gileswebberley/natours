@@ -48,7 +48,7 @@ export const uploadTourImages = multer({
 
 //now we'll try using the pipeline workflow for image uploads to Cloudinary. This is a more efficient way of uploading files as it streams the file directly to Cloudinary rather than storing any buffers in memory. We'll use the new centralised cloudinary instance and the uploadViaBuffer() function from cloudinaryUtils.js. We'll also use Promise.all() to handle multiple image uploads concurrently.
 export const resizeAndUploadTourImages = async (req, res, next) => {
-  if (!req.files || (!req.files.coverImage && !req.files.images)) return next();
+  if (!req.files) return next();
 
   const trackingUrlsToRollback = [];
 
@@ -74,7 +74,7 @@ export const resizeAndUploadTourImages = async (req, res, next) => {
     // B) Process Secondary Images Concurrently
     if (req.files.images) {
       const imagePromises = req.files.images.map((file, index) => {
-        const imgPublicId = `tour-${req.params.id || timestamp}-${index}`;
+        const imgPublicId = `tour-${req.params.id || timestamp}-${index + 1}`;
         return uploadViaPipeline(file.buffer, folderPath, imgPublicId, {
           width: 800,
           height: 600,

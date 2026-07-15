@@ -129,6 +129,7 @@ export const uploadViaPipeline = async (
       //This is the standard callback mentioned above which we use to reject or resolve the Promise
       (error, result) => {
         if (error) return reject(error);
+        //it's all worked so return the url for the image
         resolve(result.secure_url);
       },
     );
