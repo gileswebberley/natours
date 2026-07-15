@@ -57,8 +57,8 @@ export const resizeAndUploadTourImages = async (req, res, next) => {
     const folderPath = 'natours/tours';
 
     // A) Process Cover Image with wide landscape dimensions
-    if (req.files.coverImage) {
-      const coverFile = req.files.coverImage[0];
+    if (req.files.imageCover) {
+      const coverFile = req.files.imageCover[0];
       const coverPublicId = `tour-${req.params.id || timestamp}-cover`;
 
       const secureUrl = await uploadViaPipeline(
@@ -67,7 +67,7 @@ export const resizeAndUploadTourImages = async (req, res, next) => {
         coverPublicId,
         { width: 2000, height: 1333, quality: 90 },
       );
-      req.body.coverImage = secureUrl;
+      req.body.imageCover = secureUrl;
       trackingUrlsToRollback.push(secureUrl);
     }
 
