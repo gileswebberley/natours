@@ -3,7 +3,7 @@ import User from '../models/userModel.js';
 import jwt from 'jsonwebtoken';
 import ms from 'ms';
 import AppError from '../utils/appError.js';
-import sendEmail from '../utils/email.js';
+import sendEmail, { Email } from '../utils/email.js';
 import validator from 'validator';
 import {
   cryptoHash,
@@ -60,6 +60,9 @@ export const signup = async (req, res) => {
     password: req.body.password,
     passwordConfirm: req.body.passwordConfirm,
   });
+  //first test of our new Email class
+  const url = `${req.protocol}://${req.get('host')}/me`;
+  await new Email(newUser, url).sendWelcome();
 
   createAndSendToken(newUser, 201, res);
 };

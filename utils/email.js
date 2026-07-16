@@ -42,11 +42,14 @@ export class Email {
 
   async send(template, subject) {
     //render pug template, not like in our view controllers with res.render()
-    const html = pug.renderFile(`${__dirname}/../views/emails/${template}`, {
-      firstName: this.firstName,
-      url: this.url,
-      subject,
-    });
+    const html = pug.renderFile(
+      `${__dirname}/../views/emails/${template}.pug`,
+      {
+        firstName: this.firstName,
+        url: this.url,
+        subject,
+      },
+    );
     //use our static html-to-text
     const text = Email.convertHtmlToText(html);
     //define options
