@@ -12,6 +12,12 @@ export const filterObj = (obj, ...filters) => {
   return filteredObj;
 };
 
+export const getUUID = () => {
+  const uuid = crypto.randomUUID();
+  // console.log('uuid: ', uuid);
+  return uuid;
+};
+
 export const mimicEmailTimer = 800 + Math.random() * 700;
 export const mimicPasswordCheckTimer = 250;
 export const mimicWorkTime = (ms) =>

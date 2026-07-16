@@ -7,24 +7,22 @@ import { rollbackCloudinaryUploads } from '../utils/cloudinaryUtils.js';
 
 //No point adding a createOne function as they are quite specific to each model - user creation is with sign-up, review creation requires checks for user/tour id and also casting them to ObjectIds, and so the only plain one is for creating a tour and that's only a couple of lines anyway. Actually we'll add an admin only createUser controller so we'll do the createOne function after all.
 export const createOne = (Model) => async (req, res) => {
-  const document = await Model.create(req.body);
-  if (!document) {
+  try {
+    const document = await Model.create(req.body);
+
+    res.status(201).json({
+      status: 'success',
+      data: {
+        document,
+      },
+    });
+  } catch (err) {
     //if creating a Tour fails we may have already uploaded images so we'll check for the rollback array and if it's in the req object we'll use our rollback function from cloudinaryUtils
     if (req.cloudinaryRollbackUrls) {
       rollbackCloudinaryUploads(req.cloudinaryRollbackUrls);
     }
-    throw new AppError(
-      `Failed to create new ${Model.modelName.toLowerCase()}`,
-      400,
-    );
+    throw err;
   }
-
-  res.status(201).json({
-    status: 'success',
-    data: {
-      document,
-    },
-  });
 };
 
 //Works for tours, users, and reviews as it stands
@@ -77,10 +75,18 @@ export const getOne = (Model, populateOptions) => async (req, res) => {
 
 //only used for tours at the moment!
 export const updateOne = (Model) => async (req, res) => {
-  const document = await Model.findByIdAndUpdate(req.params.id, req.body, {
-    returnDocument: 'after',
-    runValidators: true,
-  });
+  let document;
+  try {
+    document = await Model.findByIdAndUpdate(req.params.id, req.body, {
+      returnDocument: 'after',
+      runValidators: true,
+    });
+  } catch (err) {
+    if (req.cloudinaryRollbackUrls) {
+      rollbackCloudinaryUploads(req.cloudinaryRollbackUrls);
+    }
+    throw err;
+  }
 
   if (!document) {
     //if updating a Tour fails we may have already uploaded images so we'll check for the rollback array and if it's in the req object we'll use our rollback function from cloudinaryUtils
@@ -91,6 +97,10 @@ export const updateOne = (Model) => async (req, res) => {
       `Failed to update ${Model.modelName.toLowerCase()} with id ${req.params.id}`,
       400,
     );
+  }
+  if (req.replacedImagesToDelete && req.replacedImagesToDelete.length > 0) {
+    //clear up the old tour images from the cloud
+    rollbackCloudinaryUploads(req.replacedImagesToDelete);
   }
   res.status(200).json({
     status: 'success',

@@ -31,14 +31,20 @@ export const getPublicIdFromUrl = (url) => {
   return [...folderParts, fileName].join('/');
 };
 /**
- * Non-blocking background worker to safely destroy aborted files, see userController for an example of usage
+ * Non-blocking background worker (so it doesn't have to be async or awaited) to safely destroy aborted files, see userController for an example of usage. It can be sent either clean publicIds or full urls
  */
 export const rollbackCloudinaryUploads = (urlsArray) => {
   if (!urlsArray || urlsArray.length === 0) return;
 
   const validPublicIds = urlsArray
-    .map((url) => getPublicIdFromUrl(url))
-    .filter(Boolean);
+    .map((url) => {
+      if (url.startsWith('http')) {
+        return getPublicIdFromUrl(url);
+      } else {
+        return url;
+      }
+    })
+    .filter(Boolean); //this is just to filter out any falsy values like null, undefined, or ''
 
   validPublicIds.forEach((publicId) => {
     cloudinary.uploader

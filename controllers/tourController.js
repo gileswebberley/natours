@@ -10,8 +10,13 @@ import {
   updateOne,
 } from './handlerFactory.js';
 // import { v2 as cloudinary } from 'cloudinary';
-import { cloudinary, uploadViaPipeline } from '../utils/cloudinaryUtils.js'; //the new centralised configured cloudinary instance
+import {
+  cloudinary,
+  getPublicIdFromUrl,
+  uploadViaPipeline,
+} from '../utils/cloudinaryUtils.js'; //the new centralised configured cloudinary instance
 import { multerLimits } from '../utils/multerLimits.js';
+import { getUUID } from '../utils/utilFunctions.js';
 
 //middleware for our first alias route (see tourRoutes as well) - use nullish coalescing operator to avoid trying to spread undefined.
 export const aliasTopTours = (req, res, next) => {
@@ -51,30 +56,36 @@ export const resizeAndUploadTourImages = async (req, res, next) => {
   if (!req.files) return next();
 
   const trackingUrlsToRollback = [];
+  //if we're updating a tour, rather than creating a new one, then we should clear up the old photos. This means we'll have to timestamp or UUID them always otherwise we will upload and then have the same name so delete what we've just uploaded
+  const replacedImagesToDelete = [];
 
   try {
-    const timestamp = Date.now();
+    const currentTour = req.params.id
+      ? await Tour.findById(req.params.id)
+      : undefined;
     const folderPath = 'natours/tours';
-
+    // because these are given fixed names if there is an id on the params they will simply overwrite whatever is on the cloud already
     // A) Process Cover Image with wide landscape dimensions
     if (req.files.imageCover) {
       const coverFile = req.files.imageCover[0];
-      const coverPublicId = `tour-${req.params.id || timestamp}-cover`;
+      const coverPublicId = `tour-${req.params.id || 'new'}-${getUUID()}-cover`;
 
       const secureUrl = await uploadViaPipeline(
         coverFile.buffer,
         folderPath,
         coverPublicId,
-        { width: 2000, height: 1333, quality: 90 },
+        { width: 2000, height: 1333, quality: 80 },
       );
       req.body.imageCover = secureUrl;
       trackingUrlsToRollback.push(secureUrl);
+      if (currentTour && currentTour.imageCover.startsWith('http'))
+        replacedImagesToDelete.push(currentTour.imageCover);
     }
 
     // B) Process Secondary Images Concurrently
     if (req.files.images) {
       const imagePromises = req.files.images.map((file, index) => {
-        const imgPublicId = `tour-${req.params.id || timestamp}-${index + 1}`;
+        const imgPublicId = `tour-${req.params.id || 'new'}-${getUUID()}-${index + 1}`;
         return uploadViaPipeline(file.buffer, folderPath, imgPublicId, {
           width: 800,
           height: 600,
@@ -85,9 +96,22 @@ export const resizeAndUploadTourImages = async (req, res, next) => {
       const secureUrls = await Promise.all(imagePromises);
       req.body.images = secureUrls;
       trackingUrlsToRollback.push(...secureUrls);
+      if (currentTour) {
+        const oldCloudImages = currentTour.images?.filter((img) =>
+          img.startsWith('http'),
+        );
+        replacedImagesToDelete.push(...oldCloudImages);
+      }
     }
 
-    req.cloudinaryRollbackUrls = trackingUrlsToRollback;
+    //if something goes wrong during the DB update in the next stage then we remove these orphaned images
+    req.cloudinaryRollbackUrls = trackingUrlsToRollback.map((url) => {
+      return getPublicIdFromUrl(url);
+    });
+    //whereas if all goes well then remove the old images that have been replaced, only needed in updateOne()
+    req.replacedImagesToDelete = replacedImagesToDelete.map((url) => {
+      return getPublicIdFromUrl(url);
+    });
     next();
   } catch (err) {
     console.error('[Tour Upload Error] Initiating asset rollback...');
