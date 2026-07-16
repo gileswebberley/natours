@@ -5,6 +5,10 @@ import { showAlert } from './alerts.js';
 async function updateMe(form) {
   //   const bodyObj = { name };
   try {
+    //I want a little message to appear immediately if there is going to be a file upload involved as it takes up to 3 secs at the moment. You cannot check if it exists with form.photo so have to use the FormData has() method (if you wanted to inspect the object itself then you use form.get())
+    if (form.has('photo')) {
+      showAlert('success', 'Image uploading - this may take a moment...');
+    }
     const res = await axios.patch(`/api/v1/users/updateMe`, form);
     showAlert(
       'success',
