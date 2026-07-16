@@ -63,7 +63,7 @@ export const rollbackCloudinaryUploads = (urlsArray) => {
 // ==========================================
 /**
  * Processes image to a local memory buffer using sharp before uploading.
- * Best suited for: Single profile pictures and low-traffic internal uploads.
+ * Best suited for: Single profile pictures and low-traffic internal uploads. This is how we were shown in the course, just with cloudinary added.
  */
 export const uploadViaBuffer = async (
   fileBuffer,

@@ -119,6 +119,10 @@ export const deleteOne = (Model) => async (req, res) => {
       `No ${Model.modelName.toLowerCase()} found to be deleted with id: ${req.params.id}`,
       404,
     );
+
+  //delete the database document before clearing up images in case it fails and throws an error
+  await doc.deleteOne();
+
   //now we've got images on cloudinary we'll ahve to clear them up as well as simply delete the user or tour - notice these functions have access to the req object as it forms a Closure given it's scope
   const clearUserImage = () => {
     if (doc.photo && doc.photo.startsWith('http')) {
@@ -151,7 +155,6 @@ export const deleteOne = (Model) => async (req, res) => {
     default:
       break;
   }
-  await doc.deleteOne();
 
   res.status(204).json({
     status: 'success',
