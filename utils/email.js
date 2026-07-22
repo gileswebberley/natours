@@ -69,6 +69,13 @@ export class Email {
   }
 }
 
+export class CustomEmail extends Email {
+  constructor(user, url, to) {
+    super(user, url);
+    this.to = to;
+  }
+}
+
 const sendEmail = async (options) => {
   const transport = nodemailer.createTransport({
     host: process.env.MAILTRAP_HOST,
