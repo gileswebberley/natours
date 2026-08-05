@@ -250,12 +250,16 @@ export const forgotPassword = async (req, res) => {
         Date.now() - user.emailChangedAt.getTime() < emailCoolDown;
       if (isChangeLocked) {
         if (user.oldEmail) {
-          await sendEmail({
-            email: user.oldEmail,
-            subject:
-              '[SECURITY NOTIFICATION] Someone has tried to reset your password',
-            message: `Someone tried to reset your password shortly after changing your Natours email address to ${user.email}. You should have received an email when this change was made, please find it and follow the link to revert to this address and secure your account.`,
-          });
+          await new Email(
+            user,
+            user.email,
+          ).sendEmailChangedThenPasswordNotification();
+          // await sendEmail({
+          //   email: user.oldEmail,
+          //   subject:
+          //     '[SECURITY NOTIFICATION] Someone has tried to reset your password',
+          //   message: `Someone tried to reset your password shortly after changing your Natours email address to ${user.email}. You should have received an email when this change was made, please find it and follow the link to revert to this address and secure your account.`,
+          // });
         }
         throw new AppError(
           `For your security password resets are restricted for 24hrs after an email change`,
