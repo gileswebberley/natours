@@ -1,0 +1,16 @@
+extends emailBase
+
+block content
+    p Hi #{firstName},
+    p A request was made to change your email address on Natours to #{old}. This may be an attempt by a hacker to hijack your account!
+    p  If this wasn't you please follow this link below urgently to block this attempt and secure your account, otherwise you're safe to ignore this warning. This is a security measure to avoid your account being compromised by someone with bad intentions.
+    table.btn.btn-primary(role='presentation', border='0', cellpadding='0', cellspacing='0')
+        tbody
+            tr
+                td(align='left')
+                    table(role='presentation', border='0', cellpadding='0', cellspacing='0')
+                        tbody
+                            tr
+                                td
+                                    a(href=`${url}`, target='_blank') Block Email Change
+    p Please keep your login details private, we're here to keep you safe.

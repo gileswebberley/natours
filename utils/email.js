@@ -11,7 +11,7 @@ const __dirname = path.dirname(__filename);
 export class Email {
   //user is self evident but url is for any button links in the emails
   constructor(user, url) {
-    this.user = user;
+    // this.user = user;
     this.to = user.email;
     this.firstName = user.name.split(' ')[0];
     this.url = url;
@@ -67,32 +67,65 @@ export class Email {
         subject,
       },
     );
+    return html;
   }
 
   async sendWelcome() {
-    const html = this.renderHTML('welcome', 'Welcome to the Natours gang');
-    await this.send('Welcome to the Natours gang', html);
+    const subject = 'Welcome to the Natours gang';
+    const html = this.renderHTML('welcome', subject);
+    await this.send(subject, html);
+  }
+
+  async sendPasswordReset() {
+    const subject = 'Your Natours password reset link (expires in 10 minutes)';
+    const html = this.renderHTML('passwordReset', subject);
+    await this.send(subject, html);
+  }
+
+  async sendEmailChangeConfirm() {
+    const subject =
+      'You must confirm the change to your email on Natours within 10 minutes';
+    const html = this.renderHTML('emailChangeConfirm', subject);
+    await this.send(subject, html);
+  }
+}
+
+//for use with email change, namely where we want to send a message to the old email address to warn of the change or to send the revertEmail message
+export class CustomEmail extends Email {
+  constructor(user, url, to, old) {
+    super(user, url);
+    this.to = to;
+    this.old = old;
+  }
+
+  renderHTML(template, subject) {
+    //render pug template, not like in our view controllers with res.render()
+    const html = pug.renderFile(
+      `${__dirname}/../views/emails/${template}.pug`,
+      {
+        firstName: this.firstName,
+        url: this.url,
+        old: this.old,
+        subject,
+      },
+    );
+    return html;
   }
 
   async sendEmailChangedThenPasswordNotification() {
     // this.url = this.to;
-    this.to = this.user.oldEmail;
-    const html = this.renderHTML(
-      'emailChange',
-      '[SECURITY NOTIFICATION] Someone has tried to reset your password',
-    );
-    await this.send(
-      '[SECURITY NOTIFICATION] Someone has tried to reset your password',
-      html,
-    );
+    // this.to = this.user.oldEmail;
+    const subject =
+      '[SECURITY NOTIFICATION - URGENT ACTION REQUIRED] Someone has tried to reset your password';
+    const html = this.renderHTML('emailChange', subject);
+    await this.send(subject, html);
   }
-}
 
-//for use with email change, namely where we want to send a message to the old email address to warn of the change
-export class CustomEmail extends Email {
-  constructor(user, url, to) {
-    super(user, url);
-    this.to = to;
+  async sendEmailRevert() {
+    const subject =
+      '[SECURITY NOTIFICATION - URGENT ACTION REQUIRED] Someone has tried to change your email address';
+    const html = this.renderHTML('emailChangeRevert', subject);
+    await this.send(subject, html);
   }
 }
 
