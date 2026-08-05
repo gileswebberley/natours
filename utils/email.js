@@ -82,17 +82,17 @@ export class Email {
     await this.send(subject, html);
   }
 
-  async sendEmailChangeConfirm() {
-    const subject =
-      'You must confirm the change to your email on Natours within 10 minutes';
-    const html = this.renderHTML('emailChangeConfirm', subject);
-    await this.send(subject, html);
-  }
+  // async sendEmailChangeConfirm() {
+  //   const subject =
+  //     'You must confirm the change to your email on Natours within 10 minutes';
+  //   const html = this.renderHTML('emailChangeConfirm', subject);
+  //   await this.send(subject, html);
+  // }
 }
 
 //for use with email change, namely where we want to send a message to the old email address to warn of the change or to send the revertEmail message
 export class CustomEmail extends Email {
-  constructor(user, url, to, old) {
+  constructor(user, url, to, old = null) {
     super(user, url);
     this.to = to;
     this.old = old;
@@ -116,8 +116,15 @@ export class CustomEmail extends Email {
     // this.url = this.to;
     // this.to = this.user.oldEmail;
     const subject =
-      '[SECURITY NOTIFICATION - URGENT ACTION REQUIRED] Someone has tried to reset your password';
+      '[SECURITY NOTIFICATION - URGENT ACTION REQUIRED] Someone has requested a password reset to be sent to a new email address';
     const html = this.renderHTML('emailChange', subject);
+    await this.send(subject, html);
+  }
+
+  async sendEmailChangeConfirm() {
+    const subject =
+      'You must confirm the change to your email on Natours within 10 minutes';
+    const html = this.renderHTML('emailChangeConfirm', subject);
     await this.send(subject, html);
   }
 

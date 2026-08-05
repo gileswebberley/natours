@@ -467,7 +467,12 @@ export const updateMyEmail = async (req, res) => {
   //   `;
   //because there may be an error when trying to send an email it might throw an error and we will want to clean up the user so the token doesn't exist
   try {
-    await new Email(user, resetURL).sendEmailChangeVerification();
+    // await new Email(user, resetURL).sendEmailChangeVerification();
+    await new CustomEmail(
+      user,
+      resetURL,
+      user.pendingEmail,
+    ).sendEmailChangeConfirm();
     // send email to new address to confirm
     // await sendEmail({
     //   email: user.pendingEmail, //req.body.email,
