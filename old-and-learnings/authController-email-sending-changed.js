@@ -3,7 +3,7 @@ import User from '../models/userModel.js';
 import jwt from 'jsonwebtoken';
 import ms from 'ms';
 import AppError from '../utils/appError.js';
-import { CustomEmail, Email } from '../utils/email.js';
+import sendEmail, { CustomEmail, Email } from '../utils/email.js';
 import validator from 'validator';
 import {
   cryptoHash,
@@ -256,6 +256,12 @@ export const forgotPassword = async (req, res) => {
             user.oldEmail,
             user.email,
           ).sendEmailChangedThenPasswordNotification();
+          // await sendEmail({
+          //   email: user.oldEmail,
+          //   subject:
+          //     '[SECURITY NOTIFICATION] Someone has tried to reset your password',
+          //   message: `Someone tried to reset your password shortly after changing your Natours email address to ${user.email}. You should have received an email when this change was made, please find it and follow the link to revert to this address and secure your account.`,
+          // });
         }
         throw new AppError(
           `For your security password resets are restricted for 24hrs after an email change`,
@@ -273,10 +279,32 @@ export const forgotPassword = async (req, res) => {
     ).replace(/^\/|\/$/g, '');
     //We have now set up our email sending function so we'll send a link to the reset route
     const resetUrl = `${req.protocol}://${req.get('host')}/${cleanEndpoint}/${resetToken}`;
-
+    // const message = `Forgot your password? ${resetEndpoint ? 'Please follow this link to set a new one' : `Submit a PATCH request with your new password and passwordConfirm in the body to: ${resetUrl}`} \nPlease note that this link is only valid for 10 minutes \nIf you did not send this password reset request please ignore this email`;
+    //I actually want to send a link to the reset password page that I'll create in pug, I may want to make some options attached to the req.body like an endpoint or something so this can be used with different project structures?
+    // const html = `
+    //   <div style="font-family: sans-serif; padding: 20px; color: #333;">
+    //     <h2>Password Reset Request</h2>
+    //     <p>${message}</p>
+    //     <div style="margin: 25px 0;">
+    //       <a href="${resetUrl}"
+    //          style="background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">
+    //          Reset Password
+    //       </a>
+    //     </div>
+    //     <p style="font-size: 12px; color: #666;">If the button doesn't work, copy and paste this link into your browser:</p>
+    //     <p style="font-size: 12px; color: #007bff;">${resetUrl}</p>
+    //   </div>
+    // `;
     //because there may be an error when trying to send an email it might throw an error and we will want to clean up the user so the token doesn't exist
     try {
       await new Email(user, resetUrl).sendPasswordReset();
+      // console.log('sending reset email');
+      // await sendEmail({
+      //   email: user.email,
+      //   subject: 'Your password reset link (expires in 10 minutes)',
+      //   message,
+      //   html,
+      // });
     } catch (err) {
       user.set('passwordResetToken', undefined, { strict: false });
       user.set('passwordResetExpires', undefined, { strict: false });
@@ -398,6 +426,21 @@ export const updateMyEmail = async (req, res) => {
   );
 
   const resetURL = `${req.protocol}://${req.get('host')}/${cleanEndpoint}/${verifyToken}`;
+  // const messageNew = `To confirm the change to your email address registered to Natours please ${resetEndpoint ? 'verify by following the link' : `send a PATCH request to ${resetURL}`}\nPlease note that this link is only valid for 10 minutes \nIf you did not send this email change request please ignore this email`;
+  // const htmlNew = `
+  //     <div style="font-family: sans-serif; padding: 20px; color: #333;">
+  //       <h2>Email Change Request</h2>
+  //       <p>${messageNew}</p>
+  //       <div style="margin: 25px 0;">
+  //         <a href="${resetURL}"
+  //            style="background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">
+  //            Verify Email
+  //         </a>
+  //       </div>
+  //       <p style="font-size: 12px; color: #666;">If the button doesn't work, copy and paste this link into your browser:</p>
+  //       <p style="font-size: 12px; color: #007bff;">${resetURL}</p>
+  //     </div>
+  //   `;
 
   //check whether we've been sent a custom endpoint for reverting and if so ensure it has no leading or trailing slashes
   const revertEndpoint = req.body.revertEndpoint;
@@ -407,17 +450,37 @@ export const updateMyEmail = async (req, res) => {
   );
 
   const revertURL = `${req.protocol}://${req.get('host')}/${cleanRevert}/${revertToken}`;
-
+  // const messageOld = `A request was made to change your email address on Natours to ${user.pendingEmail}. This may be an attempt by a hacker to hijack your account. If this wasn't you please ${revertEndpoint ? 'follow this link' : `send a PATCH request to ${revertURL}`} urgently to block this attempt and secure your account`;
+  // const htmlOld = `
+  //     <div style="font-family: sans-serif; padding: 20px; color: #333;">
+  //       <h2>Email Change Request</h2>
+  //       <p>${messageOld}</p>
+  //       <div style="margin: 25px 0;">
+  //         <a href="${revertURL}"
+  //            style="background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">
+  //            Verify Email
+  //         </a>
+  //       </div>
+  //       <p style="font-size: 12px; color: #666;">If the button doesn't work, copy and paste this link into your browser:</p>
+  //       <p style="font-size: 12px; color: #007bff;">${revertURL}</p>
+  //     </div>
+  //   `;
   //because there may be an error when trying to send an email it might throw an error and we will want to clean up the user so the token doesn't exist
   try {
-    // send email to new address to confirm
     // await new Email(user, resetURL).sendEmailChangeVerification();
     await new CustomEmail(
       user,
       resetURL,
       user.pendingEmail,
     ).sendEmailChangeConfirm();
-
+    // send email to new address to confirm
+    // await sendEmail({
+    //   email: user.pendingEmail, //req.body.email,
+    //   subject:
+    //     'You must confirm the change to your email on Natours within 10 minutes',
+    //   message: messageNew,
+    //   html: htmlNew,
+    // });
     //send the warning to the current email to revert/block - can't on the Mailtrap free plan :(
     if (process.env.NODE_ENV !== 'development') {
       await new CustomEmail(
@@ -426,6 +489,13 @@ export const updateMyEmail = async (req, res) => {
         user.email,
         user.pendingEmail,
       ).sendEmailRevert();
+      // await sendEmail({
+      //   email: user.email,
+      //   subject:
+      //     '[URGENT SECURITY ISSUE] A request has been made to change your email',
+      //   message: messageOld,
+      //   html: htmlOld,
+      // });
     } else {
       console.log(`Fake email for development, revert url: ${revertURL}`);
     }

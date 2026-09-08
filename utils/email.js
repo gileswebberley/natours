@@ -13,7 +13,7 @@ export class Email {
   constructor(user, url) {
     // this.user = user;
     this.to = user.email;
-    this.firstName = user.name.split(' ')[0];
+    this.firstName = user.name.split(' ')[0] || 'User';
     this.url = url;
     this.from = process.env.MAILTRAP_FROM;
   }
@@ -30,7 +30,11 @@ export class Email {
   newTransport() {
     if (process.env.NODE_ENV === 'production') {
       //create sendGrid
-      return;
+      //until this is properly set up I'm going to throw an error to avoid confusion
+      throw new Error(
+        'Email class has not been set up for production use yet, check out the email.js file for details',
+      );
+      // return;
     }
     return nodemailer.createTransport({
       host: process.env.MAILTRAP_HOST,
@@ -57,7 +61,8 @@ export class Email {
     await this.newTransport().sendMail(mailOptions);
   }
 
-  renderHTML(template, subject) {
+  //refactor - I have ended up with virtually the same function redefined in the CustomEmail subclass so instead we'll just make this one more flexible
+  renderHTML(template, subject, additionalData = {}) {
     //render pug template, not like in our view controllers with res.render()
     const html = pug.renderFile(
       `${__dirname}/../views/emails/${template}.pug`,
@@ -65,6 +70,7 @@ export class Email {
         firstName: this.firstName,
         url: this.url,
         subject,
+        ...additionalData,
       },
     );
     return html;
@@ -98,40 +104,39 @@ export class CustomEmail extends Email {
     this.old = old;
   }
 
-  renderHTML(template, subject) {
-    //render pug template, not like in our view controllers with res.render()
-    const html = pug.renderFile(
-      `${__dirname}/../views/emails/${template}.pug`,
-      {
-        firstName: this.firstName,
-        url: this.url,
-        old: this.old,
-        subject,
-      },
-    );
-    return html;
-  }
+  //now that we've refactored the renderHTML method to accept additional data we can simply remove this from the subclass by passing in an object with the old email address as a property
+  // renderHTML(template, subject) {
+  //   //render pug template, not like in our view controllers with res.render()
+  //   const html = pug.renderFile(
+  //     `${__dirname}/../views/emails/${template}.pug`,
+  //     {
+  //       firstName: this.firstName,
+  //       url: this.url,
+  //       old: this.old,
+  //       subject,
+  //     },
+  //   );
+  //   return html;
+  // }
 
   async sendEmailChangedThenPasswordNotification() {
-    // this.url = this.to;
-    // this.to = this.user.oldEmail;
     const subject =
       '[SECURITY NOTIFICATION - URGENT ACTION REQUIRED] Someone has requested a password reset to be sent to a new email address';
-    const html = this.renderHTML('emailChange', subject);
+    const html = this.renderHTML('emailChange', subject, { old: this.old });
     await this.send(subject, html);
   }
 
   async sendEmailChangeConfirm() {
     const subject =
       'You must confirm the change to your email on Natours within 10 minutes';
-    const html = this.renderHTML('emailChangeConfirm', subject);
+    const html = this.renderHTML('emailChangeConfirm', subject, { old: this.old });
     await this.send(subject, html);
   }
 
   async sendEmailRevert() {
     const subject =
       '[SECURITY NOTIFICATION - URGENT ACTION REQUIRED] Someone has tried to change your email address';
-    const html = this.renderHTML('emailChangeRevert', subject);
+    const html = this.renderHTML('emailChangeRevert', subject, { old: this.old });
     await this.send(subject, html);
   }
 }
