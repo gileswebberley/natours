@@ -10,7 +10,6 @@ import {
 import sharp from 'sharp';
 import User from '../models/userModel.js';
 import AppError from '../utils/appError.js';
-import sendEmail from '../utils/email.js';
 import { filterObj } from '../utils/utilFunctions.js';
 import { createOne, deleteOne, getAll, getOne } from './handlerFactory.js';
 import { multerLimits } from '../utils/multerLimits.js';

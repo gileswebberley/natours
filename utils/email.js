@@ -129,20 +129,24 @@ export class CustomEmail extends Email {
   async sendEmailChangeConfirm() {
     const subject =
       'You must confirm the change to your email on Natours within 10 minutes';
-    const html = this.renderHTML('emailChangeConfirm', subject, { old: this.old });
+    const html = this.renderHTML('emailChangeConfirm', subject, {
+      old: this.old,
+    });
     await this.send(subject, html);
   }
 
   async sendEmailRevert() {
     const subject =
       '[SECURITY NOTIFICATION - URGENT ACTION REQUIRED] Someone has tried to change your email address';
-    const html = this.renderHTML('emailChangeRevert', subject, { old: this.old });
+    const html = this.renderHTML('emailChangeRevert', subject, {
+      old: this.old,
+    });
     await this.send(subject, html);
   }
 }
 
 //the original simple email sending function that was used before we crated a class (or two!)
-const sendEmail = async (options) => {
+export const sendEmail = async (options) => {
   const transport = nodemailer.createTransport({
     host: process.env.MAILTRAP_HOST,
     port: process.env.MAILTRAP_PORT,
@@ -164,4 +168,3 @@ const sendEmail = async (options) => {
   //if you don't add a callback function as the second argument then it returns a promise, async is good for node remember
   const info = await transport.sendMail(mailOptions);
 };
-export default sendEmail;
