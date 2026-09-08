@@ -136,6 +136,7 @@ export class CustomEmail extends Email {
   }
 }
 
+//the original simple email sending function that was used before we crated a class (or two!)
 const sendEmail = async (options) => {
   const transport = nodemailer.createTransport({
     host: process.env.MAILTRAP_HOST,
