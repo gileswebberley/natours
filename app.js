@@ -5,6 +5,7 @@ import { router as viewRouter } from './routes/viewRoutes.js';
 import { router as tourRouter } from './routes/tourRoutes.js';
 import { router as userRouter } from './routes/userRoutes.js';
 import { router as reviewRouter } from './routes/reviewRoutes.js';
+import { router as bookingRouter } from './routes/bookingRoutes.js';
 import AppError from './utils/appError.js';
 import globalErrorHandler from './controllers/errorController.js';
 import { globalLimiter } from './utils/rateLimiters.js';
@@ -154,6 +155,8 @@ app.use('/api/v1/tours', tourRouter);
 app.use('/api/v1/users', userRouter);
 // add in our new reviews route
 app.use('/api/v1/reviews', reviewRouter);
+// link up the bookings router too
+app.use('/api/v1/bookings', bookingRouter);
 //wildcard routes in Express 5 can no longer be simply '*' but instead we use this (NOT '/:splat*' btw)...
 app.all('/*splat', (req, res, next) => {
   next(new AppError(`${req.originalUrl} cannot be found on this server`, 404));

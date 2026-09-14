@@ -30,7 +30,7 @@ export class Email {
   newTransport() {
     if (process.env.NODE_ENV === 'production') {
       //create sendGrid
-      //until this is properly set up I'm going to throw an error to avoid confusion
+      //until this is properly set up I'm going to throw an error to avoid confusion - take a look at BREVO for implementing this but we'll need a non gmail email address for the from field and also to avoid being flagged as spam. The course uses sendGrid but I think BREVO is a better option as it has a free tier and is easier to set up.
       throw new Error(
         'Email class has not been set up for production use yet, check out the email.js file for details',
       );
@@ -87,13 +87,6 @@ export class Email {
     const html = this.renderHTML('passwordReset', subject);
     await this.send(subject, html);
   }
-
-  // async sendEmailChangeConfirm() {
-  //   const subject =
-  //     'You must confirm the change to your email on Natours within 10 minutes';
-  //   const html = this.renderHTML('emailChangeConfirm', subject);
-  //   await this.send(subject, html);
-  // }
 }
 
 //for use with email change, namely where we want to send a message to the old email address to warn of the change or to send the revertEmail message
