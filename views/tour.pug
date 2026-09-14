@@ -13,6 +13,8 @@ block append head
             crossorigin="")
     //- we need the map dom to have loaded before we run this script so we put it at the end of the body and not in the head - ah no, we can simply add defer as an attribute so it waits for the dom to load first, in fact setting the type to module apparently does the same as defer 
     script(type='module' src='/js/tourMap.js')
+    //- finally add the stripe script which captures the book now button click
+    script(type='module' src='/js/stripeCheckout.js')
 
 //- when you have repeated code with only a few variables that are different you can create a 'mixin' function and then use that in place of the repeated code. Here we are doing it for the details like date, difficulty etc. To place it in the document you simply use the + sign in front of it's name
 mixin overviewBox(icon, label, text)
@@ -96,5 +98,9 @@ block content
             .cta__content
                 h2.heading-secondary What are you waiting for?
                 p.cta__text= `${tour.duration} days. 1 adventure. Infinite memories. Make it yours today!`
-                button.btn.btn--green.span-all-rows Book tour now!
+                //- we need to pass the tourId to the booking route so we can create a checkout session for that specific tour. We can do this by adding it as a parameter in the url. We also need to make sure the user is logged in before they can book a tour, so we add the 'protect' middleware to the route in bookingRoutes.js
+                if user
+                    button.btn.btn--green.span-all-rows#book-tour(data-tour-id=`${tour.id}`) Book tour now
+                else
+                    a.btn.btn--green(href='/login') Login to book
                 //- button.btn.btn--green Book tour now!

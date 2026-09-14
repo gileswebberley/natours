@@ -41,10 +41,43 @@ Mongoose (and standard JavaScript Error objects) typically define properties lik
       error = handlePayloadTooLargeError(error);
     //check to see if it's an error thrown by multer while trying to upload files
     if (error instanceof multer.MulterError) error = handleMulterErrors(error);
+    // add in the possible Stripe errors
+    if (error.type.startsWith('Stripe')) error = handleStripeErrors(error);
 
     sendErrorProd(error, req, res);
   }
 };
+
+function handleStripeErrors(err) {
+  if (err.type === 'StripeCardError') {
+    return new AppError(`Your card was declined: ${err.message}`, 402);
+  }
+  if (err.type === 'StripeRateLimitError') {
+    return new AppError(`Too many requests were encountered concurrently`, 429);
+  }
+  if (err.type === 'StripeInvalidRequestError') {
+    return new AppError(`Something went wrong with the payment request`, 400);
+  }
+  if (err.type === 'StripeAuthenticationError') {
+    return new AppError(`Critical error with the payment request`, 500);
+  }
+  if (err.type === 'StripeAPIError') {
+    return new AppError(
+      `Something went wrong with our payment providers servers`,
+      502,
+    );
+  }
+  if (err.type === 'StripeConnectionError') {
+    return new AppError(
+      `Something went wrong with the connection to our payment providers servers`,
+      502,
+    );
+  }
+  return new AppError(
+    `Something went wrong whilst processing your payment: ${err.message}`,
+    400,
+  );
+}
 
 function handleMulterErrors(err) {
   if (err.code === 'LIMIT_FILE_SIZE') {
