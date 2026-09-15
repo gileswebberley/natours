@@ -15,6 +15,11 @@ const bookingSchema = new mongoose.Schema({
     type: Number,
     required: [true, 'Booking must have a price.'],
   },
+  //added this in as it seems essential to know what's being booked!!
+  tourStartDate: {
+    type: Date,
+    required: [true, 'Booking must have a tour start date.'],
+  },
   createdAt: {
     type: Date,
     default: Date.now,
@@ -24,3 +29,11 @@ const bookingSchema = new mongoose.Schema({
     default: true,
   },
 });
+
+//now we need to populate the fields that are referencing other models so we can get the data that's required
+bookingSchema.pre(/^find/, function () {
+  this.populate('user', 'name email').populate('tour', 'name');
+});
+
+const Booking = mongoose.model('Booking', bookingSchema);
+export default Booking;
