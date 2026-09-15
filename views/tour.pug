@@ -49,7 +49,9 @@ block content
                 .overview-box__group
                     h2.heading-secondary.ma-bt-lg Quick facts
                     //- using the mixin we created at the top of the page
-                    +overviewBox('calendar','Next date',new Date(tour.startDates[0]).toLocaleString('en-gb', {month: 'long', year: 'numeric'}))
+                    //- we'll get the next available date or the first date in the startDates array
+                    - const nextAvailableDate = tour.startDates.find(date => new Date(date) > new Date()) || tour.startDates[0];
+                    +overviewBox('calendar','Next date',nextAvailableDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }))
 
                     +overviewBox('trending-up', 'Difficulty', tour.difficulty)
 
