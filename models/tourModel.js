@@ -77,7 +77,8 @@ const tourSchema = new mongoose.Schema(
     images: [String],
     createdAt: {
       type: Date,
-      default: Date.now(),
+      // default: Date.now(),//this is wrong because it will execute the function and store the result in the database rather than storing the function to be executed when a new document is created. So we need to remove the parentheses to store the function itself rather than the result of executing it.
+      default: Date.now,
       select: false,
     },
     startLocation: locationSchema,

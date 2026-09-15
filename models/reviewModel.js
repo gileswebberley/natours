@@ -12,9 +12,10 @@ const reviewSchema = new mongoose.Schema(
       min: [1, 'A rating must be at least 1'],
       max: [5, 'A rating can only be a maximum of 5'],
     },
+    //alternatively we could use { timestamps: true } in the schema options object to automatically add createdAt and updatedAt fields to the schema, however we want to be able to use the createdAt field in our aggregation pipeline and so we will define it explicitly here
     createdAt: {
       type: Date,
-      default: Date.now(),
+      default: Date.now,
     },
     tour: {
       type: mongoose.Schema.ObjectId,
