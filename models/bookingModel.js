@@ -20,6 +20,7 @@ const bookingSchema = new mongoose.Schema({
     type: Date,
     required: [true, 'Booking must have a tour start date.'],
   },
+  stripeSessionId: String, //saving this to avoid refresh issues with the hack version of the booking creation but it's also really useful to have it stored for referencing the payment in the Stripe dashboard
   createdAt: {
     type: Date,
     default: Date.now,
