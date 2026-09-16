@@ -8,6 +8,7 @@ import validator from 'validator';
 import {
   cryptoHash,
   mimicEmailTimer,
+  mimicPasswordCheckTimer,
   mimicWorkTime,
 } from '../utils/utilFunctions.js';
 // import strict from 'node:assert/strict';

@@ -1,3 +1,4 @@
+import Booking from '../models/bookingModel.js';
 import Tour from '../models/tourModel.js';
 import AppError from '../utils/appError.js';
 import { getOne } from './handlerFactory.js';
@@ -9,6 +10,17 @@ export const getOverview = async (req, res) => {
     title: 'All Tours',
     tours,
   });
+};
+
+//get all tours that have been booked by this logged in user
+export const getMyTours = async (req, res) => {
+  //find all the bookings for this user
+  const bookings = await Booking.find({ user: req.user.id });
+  //create an array of the tour ids from the bookings
+  const tourIds = bookings?.map((booking) => booking.tour);
+  //then we can use the handy $in operator to get all of the tours whose id is in our tourIds
+  const tours = await Tour.find({ _id: { $in: tourIds } });
+  console.log(tours);
 };
 
 export const getTour = async (req, res) => {
