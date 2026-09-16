@@ -33,7 +33,8 @@ const bookingSchema = new mongoose.Schema({
 
 //now we need to populate the fields that are referencing other models so we can get the data that's required
 bookingSchema.pre(/^find/, function () {
-  this.populate('user', 'name email').populate('tour', 'name');
+  //because I added the virtual property called photoUrl to my user (so I can deal with cloudinary or local image files) and virtual properties are always 'selected' as it were I will simply add the photo property that the virtual function relies on so it doesn't return '/img/users/undefined'. Also worth noting is that the booking object when using Booking.find() does include the _id and id fields by default!!
+  this.populate('user', 'name email photo').populate('tour', 'name');
 });
 
 const Booking = mongoose.model('Booking', bookingSchema);

@@ -37,10 +37,10 @@ export const getCheckoutSession = async (req, res) => {
     customer_email: req.user.email, //this simply fills the email field in the Stripe checkout
     // client_reference_id: req.params.tourId, //OUTDATED - this is a custom field that we can use to store the tour ID for later use however it is not secure and is used in the course as a bit of a hack. There is now a metadata field that can be used for this purpose instead as it is returned in the webhook checkout.session.completed event and is more secure.
     metadata: {
-      tour: tour.id,
+      tourId: tour.id,
       price: tour.price,
       tourStartDate: nextTourDateISO,
-      user: req.user.id,
+      userId: req.user.id,
     },
 
     line_items: [
@@ -71,7 +71,7 @@ export const createBookingCheckout = async (req, res, next) => {
   const sessionId = req.query.session_id;
   if (!sessionId) {
     //as this is part of the middleware chain for our overview page route we don't throw an error but simply pass it onto the next stage where it's just a page of tours rather than creating a booking on the way through
-    console.error('No session ID provided in query string');
+    // console.error('No session ID provided in query string');
     return next();
     // throw new AppError('No payment session ID provided', 400);
   }
@@ -86,23 +86,26 @@ export const createBookingCheckout = async (req, res, next) => {
     }
     const session = await stripe.checkout.sessions.retrieve(sessionId);
     if (!session) {
-      console.error('No payment session found with that ID');
+      // console.error('No payment session found with that ID');
       return next();
       // throw new AppError('No payment session found with that ID', 404);
     }
-    const { tour, price, tourStartDate, user } = session.metadata;
-    if (!tour || !price || !tourStartDate || !user) {
-      console.error('Missing required metadata in payment session');
+    const { tourId, price, tourStartDate, userId } = session.metadata;
+    if (!tourId || !price || !tourStartDate || !userId) {
+      // console.error('Missing required metadata in payment session');
       return next();
       // throw new AppError('Missing required metadata in payment session', 400);
     }
     await Booking.create({
-      tour,
-      user,
+      tour: tourId,
+      user: userId,
       price,
       tourStartDate,
       stripeSessionId: sessionId,
     });
+
+    // const newBooking = await Booking.findOne({ user: userId });
+    // console.log(newBooking);
 
     return res.redirect(req.originalUrl.split('?')[0]); //redirect to the same url without the query string
   } catch (error) {
