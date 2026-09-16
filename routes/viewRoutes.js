@@ -2,6 +2,7 @@ import express from 'express';
 import {
   getLoginForm,
   getMe,
+  getMyBookings,
   getMyTours,
   getOverview,
   getSignupForm,
@@ -16,7 +17,7 @@ import { createBookingCheckout } from '../controllers/bookingController.js';
 export const router = express.Router();
 // place our protected routes up here so it doesn't go through the isLoggedIn as well
 router.get('/me', protect, getMe);
-router.get('/my-tours', protect, getMyTours);
+router.get('/my-tours', protect, getMyBookings);
 // this is not protecting routes but simply there for conditional rendering of the navigation
 router.use(isLoggedIn);
 

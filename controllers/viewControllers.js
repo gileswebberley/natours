@@ -23,6 +23,14 @@ export const getMyTours = async (req, res) => {
   console.log(tours);
 };
 
+//try the alternative virtual thing so we can have the booking info with the tours too I think...
+export const getMyBookings = async (req, res) => {
+  const bookings = await Booking.find({ user: req.user.id }).populate({
+    path: 'tourDetails',
+  });
+  console.log(bookings[0].tourDetails);
+};
+
 export const getTour = async (req, res) => {
   const tour = await Tour.findOne({ slug: req.params.slug }).populate([
     { path: 'guides', select: '-__v -passwordChangedAt' },
