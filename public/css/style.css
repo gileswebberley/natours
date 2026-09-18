@@ -1428,6 +1428,10 @@ body {
 .card__footer-text {
   color: #999;
 }
+.card_footer-text-wrapping {
+  overflow-wrap: break-word;
+  word-break: break-all;
+}
 .card__ratings {
   grid-row: 2 / 3;
 }

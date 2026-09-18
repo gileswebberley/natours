@@ -25,17 +25,28 @@ export const getMyTours = async (req, res) => {
 
 //try the alternative virtual thing so we can have the booking info with the tours too I think...
 export const getMyBookings = async (req, res) => {
+  //adding the lean() method so I can add properties to the tourDetails (without it is a mongoose document so it matches the model whereas this makes it into a pure JS object with deep cloning)
   const bookings = await Booking.find({ user: req.user.id }).populate({
     path: 'tourDetails',
   });
   const tourDetails = bookings.map((booking) => {
     // added the justOne: true to the virtual property to avoid these being inside a single object array
+    //make a clone so that I can add the paid and bookingRef properties
+    const tour = structuredClone(booking.tourDetails.toObject());
     // set the only start date to the date that the tour has been booked for
-    booking.tourDetails.startDates = [booking.tourStartDate];
-    return booking.tourDetails;
+    // booking.tourDetails.startDates = [booking.tourStartDate];
+    // //add in the stripe payment id as a booking reference
+    // booking.tourDetails.bookingRef =
+    //   booking.stripeSessionId || 'No ref available';
+    // booking.tourDetails.paid = booking.paid;
+    // set the only start date to the date that the tour has been booked for
+    tour.startDates = [booking.tourStartDate];
+    //add in the stripe payment id as a booking reference
+    tour.bookingRef = booking.stripeSessionId || 'No ref available';
+    tour.paid = booking.paid;
+    return tour;
   });
   console.log(tourDetails);
-  console.log();
   res.status(200).render('userAccountBookings', {
     title: 'Your Tours',
     tours: tourDetails,
