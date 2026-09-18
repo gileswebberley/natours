@@ -1399,11 +1399,7 @@ body {
 }
 .card__data {
   font-size: 1.3rem;
-  display: -webkit-box;
-  display: -ms-flexbox;
   display: flex;
-  -webkit-box-align: center;
-  -ms-flex-align: center;
   align-items: center;
 }
 .card__data svg {
@@ -1413,6 +1409,7 @@ body {
   height: 2rem;
   width: 2rem;
   fill: #55c57a;
+  flex-shrink: 0;
 }
 .card__footer {
   background-color: #f7f7f7;

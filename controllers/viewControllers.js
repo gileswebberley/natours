@@ -29,10 +29,9 @@ export const getMyBookings = async (req, res) => {
     path: 'tourDetails',
   });
   const tourDetails = bookings.map((booking) => {
-    // let tourDetails = Object.create(
-    //   Object.getPrototypeOf(booking.tourDetails),
-    //   Object.getOwnPropertyDescriptors(booking.tourDetails),
-    // );
+    // added the justOne: true to the virtual property to avoid these being inside a single object array
+    // set the only start date to the date that the tour has been booked for
+    booking.tourDetails.startDates = [booking.tourStartDate];
     return booking.tourDetails;
   });
   console.log(tourDetails);

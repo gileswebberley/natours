@@ -18,8 +18,8 @@ block content
                     span.nav-toggle-icon &nbsp;
                 .user-view__menu-container
                     ul.side-nav
-                        +userMenuItem('/me', 'settings', 'Settings', true)
-                        +userMenuItem('/my-tours', 'briefcase', 'My Bookings', false)
+                        +userMenuItem('/me', 'settings', 'Settings', currentPath === '/me')
+                        +userMenuItem('/my-tours', 'briefcase', 'My Bookings', currentPath === '/my-tours')
                         +userMenuItem('#', 'star', 'My Reviews', false)
                         +userMenuItem('#', 'credit-card', 'Billing', false)
                     - if(user.role === 'admin')
