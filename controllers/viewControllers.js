@@ -28,7 +28,19 @@ export const getMyBookings = async (req, res) => {
   const bookings = await Booking.find({ user: req.user.id }).populate({
     path: 'tourDetails',
   });
-  console.log(bookings[0].tourDetails);
+  const tourDetails = bookings.map((booking) => {
+    // let tourDetails = Object.create(
+    //   Object.getPrototypeOf(booking.tourDetails),
+    //   Object.getOwnPropertyDescriptors(booking.tourDetails),
+    // );
+    return booking.tourDetails;
+  });
+  console.log(tourDetails);
+  console.log();
+  res.status(200).render('userAccountBookings', {
+    title: 'Your Tours',
+    tours: tourDetails,
+  });
 };
 
 export const getTour = async (req, res) => {
@@ -79,7 +91,7 @@ export const revertEmail = (req, res) => {
 };
 
 export const getMe = (req, res) => {
-  res.status(200).render('userAccount', {
+  res.status(200).render('userAccountSettings', {
     title: 'User Account',
   });
 };

@@ -48,6 +48,8 @@ bookingSchema.virtual('tourDetails', {
   ref: 'Tour',
   foreignField: '_id',
   localField: 'tour',
+  //so without this next line the virtual populate produces an array with a single object inside it. This was breaking the my bookings page as each tour was inside an array rather than just the tour object itself, this little line has fixed it. Gemini said "In Mongoose, virtual populates default to returning an array of documents because a virtual relationship is designed to handle one-to-many relationships by default. Since Mongoose does not know ahead of time if your foreign field is unique, it assumes there could be multiple matching documents"
+  justOne: true,
 });
 
 const Booking = mongoose.model('Booking', bookingSchema);

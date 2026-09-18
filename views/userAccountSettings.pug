@@ -1,0 +1,52 @@
+extends userAccount
+//- include _userMenuItem
+include _passwordInput
+block append head
+    script(src='/js/passwordInputToggler.js')
+    script(type='module' src='/js/updateMe.js' defer)
+    script(type='module' src='/js/updateEmail.js' defer)
+    script(type='module' src='/js/updatePassword.js' defer)
+
+block subContent
+
+    .user-view__content
+        .user-view__form-container
+            h2.heading-secondary.ma-bt-md Your account settings
+            //- Without the API we would have -
+            //- form.form#form-user-data(action='/api/v1/users/updateMe' method='POST' enctype='multipart/form-data')
+            //- but now we will handle the form submission with JS and send it to the API
+            form.form#form-user-data
+                .form__group
+                    label.form__label(for='name') Name
+                    input#name.form__input(type='text', value=`${user.name}`, required)
+                .form__group.form__photo-upload
+                    img.form__user-photo(src=`${user.photoUrl}`, alt=`${user.name} photo`)
+                    //- note that we have added the 'name' attribute to the input so that multer can find it in the req.body when we send the form data to the server
+                    input#photo.form__upload(type='file' accept='image/*' name='photo')
+                    label(for='photo') Choose new photo
+                .form__group.right
+                    button#btn-settings.btn.btn--small.btn--green Save settings
+        .line &nbsp;
+        .user-view__form-container
+            h2.heading-secondary.ma-bt-md Email change
+            form.form#form-user-email
+                .form__group
+                    label.form__label(for='email') Email address
+                    input#email.form__input(type='email', value=`${user.email}`, required)
+                .form__group.ma-bt-md
+                    +passwordInput('password-email', 'password-email', 'Current Password')(class='form__input ma-bt-md' placeholder='••••••••' autocomplete='current-password' minlength='8')
+                .form__group.right
+                    button#btn-email.btn.btn--small.btn--green Save Email
+        .line &nbsp;
+        .user-view__form-container
+            h2.heading-secondary.ma-bt-md Password change
+            form.form#form-user-password
+                .form__group
+                    +passwordInput('password-current', 'password-current', 'Current Password')(class='form__input ma-bt-md' placeholder='••••••••' autocomplete='current-password' minlength='8')
+                .form__group
+                    +passwordInput('password', 'password', 'New Password')(class='form__input ma-bt-md' placeholder='••••••••' autocomplete='new-password' minlength='8')
+                .form__group.ma-bt-lg
+                    +passwordInput('password-confirm', 'password-confirm', 'Confirm New Password')(class='form__input ma-bt-md' placeholder='••••••••' autocomplete='new-password' minlength='8')
+                .form__group.right
+                    button#btn-password.btn.btn--small.btn--green Save password
+
