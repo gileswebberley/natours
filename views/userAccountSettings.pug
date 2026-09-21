@@ -3,6 +3,7 @@ extends userAccount
 include _passwordInput
 block append head
     script(src='/js/passwordInputToggler.js')
+    script(type='module' src='/js/fileUploaderText.js' defer)
     script(type='module' src='/js/updateMe.js' defer)
     script(type='module' src='/js/updateEmail.js' defer)
     script(type='module' src='/js/updatePassword.js' defer)
@@ -23,7 +24,7 @@ block subContent
                     img.form__user-photo(src=`${user.photoUrl}`, alt=`${user.name} photo`)
                     //- note that we have added the 'name' attribute to the input so that multer can find it in the req.body when we send the form data to the server
                     input#photo.form__upload(type='file' accept='image/*' name='photo')
-                    label(for='photo') Choose new photo
+                    label#photoLabel(for='photo') Choose new photo
                 .form__group.right
                     button#btn-settings.btn.btn--small.btn--green Save settings
         .line &nbsp;

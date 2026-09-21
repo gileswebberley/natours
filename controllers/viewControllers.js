@@ -46,7 +46,7 @@ export const getMyBookings = async (req, res) => {
     tour.paid = booking.paid;
     return tour;
   });
-  console.log(tourDetails);
+  // console.log(tourDetails);
   res.status(200).render('userAccountBookings', {
     title: 'Your Tours',
     tours: tourDetails,
