@@ -11,22 +11,32 @@ export const getCheckoutSession = async (req, res) => {
   if (!tour) {
     throw new AppError('No tour found with that ID', 404);
   }
+  const { date, attendees } = req.body;
   // 2) Create checkout session
   // for testing we need to use live images for the products which we'll grab from Jonas' live demo site, however when we deploy we can swap to the ones in the public folder of our own site. To make this simple let's define the two paths here and then we can swap them out when we deploy
   const productionImagePath = `${req.protocol}://${req.get('host')}/img/tours/${tour.imageCover}`;
   const devImagePath = `https://www.natours.dev/img/tours/${tour.imageCover}`;
 
   //let's add in the all important date of the tour that's being booked as it's not included in the course and is a very important piece of information for the user to see in their Stripe checkout. We'll add it to the product description field as this is displayed in the checkout and is a good place for it. We'll also add the tour date to the product name, and to the booking model, so that it's clear which date they are booking. We'll just have it be the next available date or the first date in the startDates array for now.
-  const today = new Date();
-  const nextTourDate =
-    tour.startDates.find((date) => new Date(date) > today) ||
-    tour.startDates[0]; //if there are no future dates then just use the first date in the array
-  const nextTourDateString = nextTourDate.toLocaleDateString('en-GB', {
+  // const today = new Date();
+  // const nextTourDate =
+  //   tour.startDates.find((date) => new Date(date) > today) ||
+  //   tour.startDates[0]; //if there are no future dates then just use the first date in the array
+  // const nextTourDateString = nextTourDate.toLocaleDateString('en-GB', {
+  //   day: 'numeric',
+  //   month: 'long',
+  //   year: 'numeric',
+  // });
+  // const nextTourDateISO = nextTourDate.toISOString(); //so we can keep it standardised when passing it through the meatdata field to the webhook and then into the booking model
+
+  //passing through the booking date now so...
+  const tourDate = new Date(date);
+  const tourDateString = tourDate.toLocaleDateString('en-GB', {
     day: 'numeric',
     month: 'long',
     year: 'numeric',
   });
-  const nextTourDateISO = nextTourDate.toISOString(); //so we can keep it standardised when passing it through the meatdata field to the webhook and then into the booking model
+  const tourDateISO = tourDate.toISOString();
 
   const session = await stripe.checkout.sessions.create({
     // before you would define payment_method_types as an array of strings, such as ['card'], but now it is recommended to leave this out and let stripe handle it with their 'dynamic payment methods' feature. This automatically offers the best payment methods based on customer location and so on whilst also allowing googlePay etc to be used if set up on their device. This is a new feature that was not possible when the ancient course was made in 2019.
@@ -39,7 +49,8 @@ export const getCheckoutSession = async (req, res) => {
     metadata: {
       tourId: tour.id,
       price: tour.price,
-      tourStartDate: nextTourDateISO,
+      attendees,
+      tourStartDate: tourDateISO,
       userId: req.user.id,
     },
 
@@ -51,11 +62,11 @@ export const getCheckoutSession = async (req, res) => {
           unit_amount: tour.price * 100, //remember that Stripe uses the smallest currency amount (eg pence in pounds)
           product_data: {
             name: `${tour.name} Tour`,
-            description: `${tour.summary} - Starting: ${nextTourDateString}`,
+            description: `${tour.summary} - Starting: ${tourDateString}`,
             images: [devImagePath],
           },
         },
-        quantity: 1,
+        quantity: parseInt(attendees),
       },
     ],
   });
@@ -90,7 +101,8 @@ export const createBookingCheckout = async (req, res, next) => {
       return next();
       // throw new AppError('No payment session found with that ID', 404);
     }
-    const { tourId, price, tourStartDate, userId } = session.metadata;
+    const { tourId, price, tourStartDate, userId, attendees } =
+      session.metadata;
     if (!tourId || !price || !tourStartDate || !userId) {
       // console.error('Missing required metadata in payment session');
       return next();
@@ -101,6 +113,7 @@ export const createBookingCheckout = async (req, res, next) => {
       user: userId,
       price,
       tourStartDate,
+      attendees,
       stripeSessionId: sessionId,
     });
 

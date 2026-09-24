@@ -1,10 +1,13 @@
 import axios from '/js/axios.js';
 import { showAlert } from './alerts.js';
 
-async function bookTour(tourId, buttonElement) {
+async function bookTour(tourId, buttonElement, formValues) {
   try {
     //remember we don't need to await res.json() when using axios as it automagically parses the JSON and returns it in res.data
-    const res = await axios.get(`/api/v1/bookings/checkout-session/${tourId}`);
+    const res = await axios.post(
+      `/api/v1/bookings/checkout-session/${tourId}`,
+      formValues,
+    );
     if (res.data.status === 'success') {
       showAlert('success', 'Redirecting to our secure payment page...', 1800);
       //wait for a moment and then redirect to the Stripe checkout
@@ -24,12 +27,16 @@ async function bookTour(tourId, buttonElement) {
   }
 }
 
-document.querySelector('#book-tour')?.addEventListener('click', async (e) => {
+const form = document.querySelector('#booking-form');
+form.addEventListener('submit', async (e) => {
   e.preventDefault();
-  e.target.textContent = 'Processing...';
-  e.target.disabled = true;
-  const { tourId } = e.target.dataset; //remember tour-id as a data-attribute is converted to camelCase in the dataset object
+  e.submitter.textContent = 'Processing...';
+  e.submitter.disabled = true;
+  const { tourId } = e.submitter.dataset; //remember tour-id as a data-attribute is converted to camelCase in the dataset object
+  const formData = new FormData(form);
+  const formValues = Object.fromEntries(formData);
+  console.log(formValues);
   //we'll pass the event in so it can be used to un-disable the button and change the text back in case of an error or the such
-  await bookTour(tourId, e.target);
+  await bookTour(tourId, e.submitter, formValues);
   // e.target.textContent = 'Book tour now';
 });

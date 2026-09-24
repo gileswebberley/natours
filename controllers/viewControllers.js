@@ -61,9 +61,40 @@ export const getTour = async (req, res) => {
   if (!tour) {
     throw new AppError('There is no tour with that name', 404);
   }
+  //add in availability of tour on a given start date based on bookings
+  const bookingCounts = await Booking.aggregate([
+    {
+      //get all bookings with this tour id
+      $match: { tour: tour._id },
+    },
+    {
+      //group by start date
+      $group: {
+        _id: '$tourStartDate',
+        totalBookings: { $sum: '$attendees' },
+      },
+    },
+  ]);
+  //now compare bookings to max group size
+  const datesAvailability = tour.startDates.map((date) => {
+    //check if this date has any bookings and make an array of them
+    const isBooked = bookingCounts.find(
+      (booking) => booking._id.getTime() === date.getTime(),
+    );
+
+    const bookedCount = isBooked ? isBooked.totalBookings : 0;
+    const spacesLeft = tour.maxGroupSize - bookedCount;
+    return {
+      date,
+      spacesLeft,
+      isSoldOut: spacesLeft <= 0,
+    };
+  });
+
   res.status(200).render('tour', {
     title: tour.name,
     tour,
+    datesAvailability,
   });
 };
 

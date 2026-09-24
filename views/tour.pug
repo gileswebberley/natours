@@ -15,6 +15,7 @@ block append head
     script(type='module' src='/js/tourMap.js')
     //- finally add the stripe script which captures the book now button click
     script(type='module' src='/js/stripeCheckout.js')
+    script(type='module' src='/js/bookingAvailability.js')
 
 //- when you have repeated code with only a few variables that are different you can create a 'mixin' function and then use that in place of the repeated code. Here we are doing it for the details like date, difficulty etc. To place it in the document you simply use the + sign in front of it's name
 mixin overviewBox(icon, label, text)
@@ -102,16 +103,16 @@ block content
                 p.cta__text= `${tour.duration} days. 1 adventure. Infinite memories. Make it yours today!`
                 //- we need to pass the tourId to the booking route so we can create a checkout session for that specific tour. We can do this by adding it as a parameter in the url. We also need to make sure the user is logged in before they can book a tour, so we add the 'protect' middleware to the route in bookingRoutes.js
                 if user
-                    form.form
+                    form.form#booking-form
                         .form__group
                             label.form__label(for='date') Select Start Date
                             select.form__input#date(name='date', required)
                                 option(value='', selected, disabled, hidden) Please Select
-                                each date in tour.startDates
-                                    option(value=date) #{date.toLocaleDateString('en-GB', {day: 'numeric',month: 'long',year: 'numeric'})}
+                                each dateObj in datesAvailability
+                                    option(value=dateObj.date, data-spaces-left=dateObj.spacesLeft, disabled=dateObj.isSoldOut) #{dateObj.date.toLocaleDateString('en-GB', {day: 'numeric',month: 'long',year: 'numeric'})}
                         .form__group
-                            label.form__label(for='atendees') How Many of You
-                            input.form__input#atendees(type='number', required, min='1', max=`${tour.maxGroupSize}`, value='1', step='1')
+                            label.form__label(for='attendees') How Many of You
+                            input.form__input#attendees(type='number', name='attendees', required, min='1', max=`${tour.maxGroupSize}`, value='1', step='1')
                         button.btn.btn--green.span-all-rows#book-tour(data-tour-id=`${tour.id}`) Book tour now
                 else
                     a.btn.btn--green(href='/login') Login to book
