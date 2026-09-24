@@ -12,7 +12,7 @@ export const getOverview = async (req, res) => {
   });
 };
 
-//get all tours that have been booked by this logged in user
+//get all tours that have been booked by this logged in user - course version
 export const getMyTours = async (req, res) => {
   //find all the bookings for this user
   const bookings = await Booking.find({ user: req.user.id });

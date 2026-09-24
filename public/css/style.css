@@ -1503,6 +1503,10 @@ body {
 .form__input::-webkit-input-placeholder {
   color: #bbb;
 }
+.form__input[type='number']::-webkit-inner-spin-button,
+.form__input[type='number']::-webkit-outer-spin-button {
+  opacity: 1;
+}
 
 .form__group:not(:last-child) {
   margin-bottom: 2.5rem;
