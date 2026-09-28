@@ -16,6 +16,10 @@ export const getOverview = async (req, res) => {
 export const getMyReviews = async (req, res) => {
   const reviews = await Review.find({ user: req.user.id });
   console.log(reviews);
+  res.status(200).render('userAccountReviews', {
+    title: 'Your Revies',
+    reviews,
+  });
 };
 
 //get all tours that have been booked by this logged in user - course version
