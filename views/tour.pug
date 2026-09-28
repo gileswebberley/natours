@@ -109,7 +109,7 @@ block content
                             select.form__input#date(name='date', required)
                                 option(value='', selected, disabled, hidden) Please Select
                                 each dateObj in datesAvailability
-                                    option(value=dateObj.date, data-spaces-left=dateObj.spacesLeft, disabled=dateObj.isSoldOut) #{dateObj.date.toLocaleDateString('en-GB', {day: 'numeric',month: 'long',year: 'numeric'})}
+                                    option(value=dateObj.date, data-spaces-left=dateObj.spacesLeft, disabled=dateObj.isSoldOut) #{dateObj.isSoldOut ? 'Sold Out' : dateObj.date.toLocaleDateString('en-GB', {day: 'numeric',month: 'long',year: 'numeric'})}
                         .form__group
                             label.form__label(for='attendees') How Many of You
                             input.form__input#attendees(type='number', name='attendees', required, min='1', max=`${tour.maxGroupSize}`, value='1', step='1')

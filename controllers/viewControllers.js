@@ -44,6 +44,7 @@ export const getMyBookings = async (req, res) => {
     //add in the stripe payment id as a booking reference
     tour.bookingRef = booking.stripeSessionId || 'No ref available';
     tour.paid = booking.paid;
+    tour.attendees = booking.attendees;
     return tour;
   });
   // console.log(tourDetails);

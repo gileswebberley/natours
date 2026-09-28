@@ -37,13 +37,13 @@ block subContent
                             .card__data
                                 svg.card__icon
                                     use(xlink:href='/img/icons.svg#icon-user')
-                                span= `${tour.maxGroupSize} people`
+                                span= `${tour.attendees}/${tour.maxGroupSize} people`
 
                         .card__footer
                             p
-                                - if(tour.paid){tour.price = 0}
-                                span.card__footer-value=`£${tour.price} `
-                                span.card__footer-text to be paid
+                                //- if(tour.paid){tour.price = 0}
+                                span.card__footer-value=`£${(tour.price * tour.attendees).toFixed(2)} `
+                                span.card__footer-text #{tour.paid ? ' paid' : ' TO BE PAID'}
                             p
                                 span.card__footer-value=`Reference: `
                                 span.card__footer-text.card_footer-text-wrapping=`${tour.bookingRef}`
