@@ -15,7 +15,7 @@ block content
                         +userMenuItem('/me', 'settings', 'Settings', currentPath === '/me')
                         +userMenuItem('/my-tours', 'briefcase', 'My Bookings', currentPath === '/my-tours')
                         +userMenuItem('/my-reviews', 'star', 'My Reviews', currentPath === '/my-reviews')
-                        +userMenuItem('#', 'credit-card', 'Billing', false)
+                        //- +userMenuItem('#', 'credit-card', 'Billing', false)
                     - if(user.role === 'admin')
                         .admin-nav
                             h5.admin-nav__heading Admin
