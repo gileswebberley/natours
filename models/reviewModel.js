@@ -47,10 +47,17 @@ reviewSchema.index({ user: 1, tour: 1 }, { unique: true });
 //IMPORTANT GOTCHA - I had the usual /^find/ regExp in here before but it was stopping the post-query hook from triggering. This new regExp now only deals with read queries and so does not malform the query which was stopping the post-query hook from running.
 reviewSchema.pre(/^find$|^findOne$/, function () {
   //hide the reviews that have not been disapproved due to illicit content then populate the reviews being careful to remove the userId from the results - no that stops the check which allows users to only update or delete their own reviews from working! NOTICE that we cannot use select to get the new photoUrl virtual property here as it is not a real field however by selecting 'photo' we will get the virtual property as well. This is because the virtual property is derived from the real field and so if we don't select the real field then the virtual property will not be available either.
-  this.find({ approved: { $ne: false } }).populate({
-    path: 'user',
-    select: 'name photo',
-  });
+  this.find({ approved: { $ne: false } }).populate([
+    {
+      path: 'user',
+      select: 'name photo',
+    },
+    //added for the my-reviews endpoint
+    {
+      path: 'tour',
+      select: 'name imageCover slug',
+    },
+  ]);
 });
 
 //we are now doing the calculations for the ratingsAverage (and quantity) fields in the tours documents by using our first static model method which will utilise the aggregation pipeline and be called when a review is created (by the hooks below)

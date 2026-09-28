@@ -987,9 +987,10 @@ body {
 }
 @media only screen and (max-width: 450px) {
   nav.nav.nav--user {
-    flex-direction: column;
+    /* flex-direction: column; */
+    flex-wrap: wrap;
     justify-content: center;
-    gap: 0.6rem;
+    gap: 1rem;
   }
 }
 .nav__el,

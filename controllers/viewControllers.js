@@ -1,4 +1,5 @@
 import Booking from '../models/bookingModel.js';
+import Review from '../models/reviewModel.js';
 import Tour from '../models/tourModel.js';
 import AppError from '../utils/appError.js';
 import { getOne } from './handlerFactory.js';
@@ -12,16 +13,21 @@ export const getOverview = async (req, res) => {
   });
 };
 
-//get all tours that have been booked by this logged in user - course version
-export const getMyTours = async (req, res) => {
-  //find all the bookings for this user
-  const bookings = await Booking.find({ user: req.user.id });
-  //create an array of the tour ids from the bookings
-  const tourIds = bookings?.map((booking) => booking.tour);
-  //then we can use the handy $in operator to get all of the tours whose id is in our tourIds
-  const tours = await Tour.find({ _id: { $in: tourIds } });
-  console.log(tours);
+export const getMyReviews = async (req, res) => {
+  const reviews = await Review.find({ user: req.user.id });
+  console.log(reviews);
 };
+
+//get all tours that have been booked by this logged in user - course version
+// export const getMyTours = async (req, res) => {
+//   //find all the bookings for this user
+//   const bookings = await Booking.find({ user: req.user.id });
+//   //create an array of the tour ids from the bookings
+//   const tourIds = bookings?.map((booking) => booking.tour);
+//   //then we can use the handy $in operator to get all of the tours whose id is in our tourIds
+//   const tours = await Tour.find({ _id: { $in: tourIds } });
+//   console.log(tours);
+// };
 
 //try the alternative virtual thing so we can have the booking info with the tours too I think...
 export const getMyBookings = async (req, res) => {
@@ -69,7 +75,7 @@ export const getTour = async (req, res) => {
       $match: { tour: tour._id },
     },
     {
-      //group by start date
+      //group by start date and add up the amount of tickets booked (with the attendees field)
       $group: {
         _id: '$tourStartDate',
         totalBookings: { $sum: '$attendees' },
@@ -82,7 +88,7 @@ export const getTour = async (req, res) => {
     const isBooked = bookingCounts.find(
       (booking) => booking._id.getTime() === date.getTime(),
     );
-
+    // isBooked is the returned bookingCounts object for this tour date so has the totalBookings property created above
     const bookedCount = isBooked ? isBooked.totalBookings : 0;
     const spacesLeft = tour.maxGroupSize - bookedCount;
     return {
