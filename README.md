@@ -1,18 +1,18 @@
-# natours
+# Natours
 
 Project that I'm building as I go through the Udemy Node.js, Express, MongoDB and More course
 
 ## Not just following a course
 
-This course was created in 2019 and although it's sold as updated I found it was far from so. Essentially I have updated the contents as I have followed along to be using Mongoose 9, Express 5, and ES Modules. I have used AI quite extensively to question the examples given whenever a new concept or package was introduced whilst also using it to help with reviewing significant code changes that I made. The API that we created is fairly fully implemented although we do not use all of the endpoints within the final project as it is purely for demonstrating concepts.
+This course was created in 2019 and although it's sold as updated I found it was far from so. Essentially I have updated the contents as I have followed along to be using Mongoose 9, Express 5, and ES Modules. I have used AI quite extensively to question the examples given whenever a new concept or package was introduced whilst also using it to help with reviewing significant code changes that I made. The API that we created is fairly fully implemented although we do not use all of the endpoints within the final project as it is purely for demonstrating concepts. I hope this goes someway towards proving my ability to pick up complex concepts and act on what I learn.
 
-Here's what Gemini said about my changes when I fed it my authController and app files -
+Here's what Gemini said about my changes when I fed it just my version of the authController and app files. On top of this I have made changes to the styling to make the front-end responsive allowing it to be viewed on all screen sizes down to the smallest of modern smartphones. I also integrated Leaflet to replace the use of MapBox and added Cloudinary storage pipeline for image uploads. I have used it as a jumping-off point to research and challenge myself to understand back-end development, at least to an entry-level grade -
 
 # Natours (Production-Hardened & Express 5 Modernised Edition)
 
 A robust, enterprise-grade full-stack tour booking application featuring a RESTful API and a dynamic, server-side rendered frontend view pipeline. This project originally began as part of Jonas Schmedtmann's _Complete Node.js Bootcamp_ on Udemy and has since been completely re-engineered to run on **Node.js (v22+)** and **Express v5.x**, while hardened with comprehensive production security configurations.
 
-## 🚀 Key Modernisations & Express 5 Engineering Workarounds
+## Key Modernisations & Express 5 Engineering Workarounds
 
 While the architectural blueprint relies on Node, Express, and MongoDB, this codebase solves significant version-migration challenges, shifting away from legacy tutorial implementations toward modern backend engineering patterns.
 
