@@ -37,19 +37,31 @@ block subContent
                             .card__data
                                 svg.card__icon
                                     use(xlink:href='/img/icons.svg#icon-user')
-                                span= `${tour.attendees}/${tour.maxGroupSize} people`
+                                span
+                                    b #{tour.attendees}
+                                span= ` / ${tour.maxGroupSize} people`
 
                         .card__footer
-                            p
-                                //- if(tour.paid){tour.price = 0}
-                                span.card__footer-value=`£${(tour.price * tour.attendees).toFixed(2)} `
-                                span.card__footer-text #{tour.paid ? ' paid' : ' TO BE PAID'}
-                            p
+                            p.card__reference
                                 span.card__footer-value=`Reference: `
                                 span.card__footer-text.card_footer-text-wrapping=`${tour.bookingRef}`
-                            p.card__ratings
-                                span.card__footer-value= `${tour.ratingsAverage} `
-                                span.card__footer-text= `rating (${tour.ratingsQuantity})`
-                            a.btn.btn--green.btn--small(href=`/tour/${tour.slug}`) Details
+                            .card__booking-info
+                                p
+                                    span.card__footer-value #{tour.paid ? ' PAID' : ' TO BE PAID'}
+                                    span.card__footer-text=` £${(tour.price * tour.attendees).toFixed(2)}`
+                                //- p.card__ratings
+                                p
+                                    span.card__footer-value= `${tour.ratingsAverage} / 5 `
+                                    span.card__footer-text= `(${tour.ratingsQuantity})`
+                            //-try to allow the user to leave a review if the tour has already taken place
+                            - const today = new Date().setHours(0,0,0,0)
+                            - const tourDate = new Date(tour.startDates[0])
+                            - tourDate.setHours(0,0,0,0)
+                            - const tourEnd = tourDate.setDate(tourDate.getDate() + tour.duration)
+                            - const hasBeen = today > tourDate
+                            .card__buttons
+                                if hasBeen
+                                    a.btn.btn--green.btn--small(href=`/add-review/${tour.id}`) Add Review
+                                a.btn.btn--green.btn--small(href=`/tour/${tour.slug}`) Details
 
 

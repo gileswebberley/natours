@@ -276,6 +276,7 @@ body {
 .btn--small {
   padding: 1.25rem 3rem !important;
   font-size: 1.4rem !important;
+  white-space: nowrap;
 }
 
 .btn-small,
@@ -1336,12 +1337,7 @@ body {
   transition: 0.3s all;
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
-  display: -webkit-box;
-  display: -ms-flexbox;
   display: flex;
-  -webkit-box-orient: vertical;
-  -webkit-box-direction: normal;
-  -ms-flex-direction: column;
   flex-direction: column;
 }
 .card__header {
@@ -1398,6 +1394,9 @@ body {
   display: flex;
   align-items: center;
 }
+.card__data span b {
+  font-weight: 700;
+}
 .card__data svg {
   margin-right: 0.7rem;
 }
@@ -1409,11 +1408,12 @@ body {
 }
 .card__footer {
   background-color: #f7f7f7;
-  padding: 2.5rem 3rem;
+  padding: 2.5rem 1rem 2.5rem 3rem;
   border-top: 1px solid #f1f1f1;
   font-size: 1.4rem;
   display: grid;
   grid-template-columns: auto 1fr;
+  /* grid-template-columns: 1fr 1fr; */
   grid-column-gap: 1rem;
   grid-row-gap: 1rem;
   margin-top: auto;
@@ -1431,8 +1431,28 @@ body {
 .card__ratings {
   grid-row: 2 / 3;
 }
-.card .btn-small,
-.card .btn {
+.card__reference {
+  grid-column: 1/3;
+}
+.card__booking-info {
+  /* grid-column: 1/3; */
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 1rem;
+}
+.card__footer .card__buttons {
+  /* grid-row: 2/3; */
+  grid-column: 2/3;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  height: 100%;
+  justify-content: flex-end; /*push to the bottom*/
+  align-items: flex-end; /*and to the right*/
+}
+.card :not(.card__buttons) > .btn-small,
+.card :not(.card__buttons) > .btn {
   grid-row: 1 / 3;
   justify-self: end;
   -ms-flex-item-align: center;
