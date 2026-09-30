@@ -17,7 +17,7 @@ export const getMyReviews = async (req, res) => {
   const reviews = await Review.find({ user: req.user.id });
   // console.log(reviews);
   res.status(200).render('userAccountReviews', {
-    title: 'Your Revies',
+    title: 'Your Reviews',
     reviews,
   });
 };
@@ -180,7 +180,7 @@ export const addReview = async (req, res) => {
 export const editReview = async (req, res) => {
   const review = await Review.findById(req.params.reviewId);
   console.log(review);
-  res.status(200).render('addReview', {
+  res.status(200).render('editReview', {
     title: `Review for ${review.tour.name}`,
     review,
   });

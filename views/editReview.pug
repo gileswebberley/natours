@@ -7,18 +7,18 @@ block content
     main.main
         .login-form
             h2.heading-secondary.ma-bt-sm Edit your review
-            h2.ma-bt-lg=`What did you think of ${tour.name} Tour that you took on ${new Date(date).toLocaleString('en-us', {day: 'numeric', month: 'long', year: 'numeric'})}`
+            h2.ma-bt-lg=`This is your review for ${review.tour.name} Tour that you took ${review.tourDate ? `on ${new Date(review.tourDate).toLocaleString('en-us', {day: 'numeric', month: 'long', year: 'numeric'})}` : ''}`
             form.form
-                input#tourId(type='hidden' value=`${tour.id}`)
-                input#tourDate(type='hidden' value=`${date}`)
+                //- input#tourId(type='hidden' value=`${review.tour.id}`)
+                input#reviewId(type='hidden' value=`${review.id}`)
                 .form__group
                     label.form__label(for='review') Your Review
-                    textarea#review.form__input(type='text', rows='5', placeholder='Please write a few words...', required, autofocus)
+                    textarea#review.form__input(type='text', rows='5', placeholder='Please write a few words...', required, autofocus) #{review.review}
                 .form__group
                     .add-review__rating
                         //-do it in reverse so that the previous stars can be highlighted
                         each star in [5,4,3,2,1]
-                            input(type='radio', id=`star${star}`, name='rating', value=`${star}`)
+                            input(type='radio', id=`star${star}`, name='rating', value=`${star}`, checked=(review.rating === star))
                             label(for=`star${star}`)
                                 svg.reviews__star(class='reviews__star')
                                     use(xlink:href='/img/icons.svg#icon-star')

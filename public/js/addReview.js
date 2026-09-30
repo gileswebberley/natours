@@ -1,18 +1,29 @@
 import axios from '/js/axios.js';
 import { showAlert } from './alerts.js';
-
-async function addReview(review, rating, tour, tourDate, btnEl) {
+//reviewId is used as a flag to say whether we are creating or editing
+async function addReview(
+  review,
+  rating,
+  tour,
+  tourDate,
+  btnEl,
+  reviewId = null,
+) {
   const resetButton = () => {
     btnEl.disabled = false;
     btnEl.textContent = 'Submit';
   };
   try {
-    const res = await axios.post('/api/v1/reviews/', {
-      review,
-      rating,
-      tour,
-      tourDate,
-    });
+    if (reviewId) {
+      await axios.patch(`/api/v1/reviews/${reviewId}`, { review, rating });
+    } else {
+      await axios.post('/api/v1/reviews/', {
+        review,
+        rating,
+        tour,
+        tourDate,
+      });
+    }
     // console.log(res);
     showAlert('success', `Thank you for your ${rating} star review`, 1800);
     //wait for a moment and then redirect to the home page
@@ -34,8 +45,9 @@ document.querySelector('.form').addEventListener('submit', (e) => {
   e.preventDefault();
   // console.log('Sign up clicked...');
   const submitButton = e.submitter;
-  const tour = document.getElementById('tourId').value;
-  const tourDate = document.getElementById('tourDate').value;
+  const tour = document.getElementById('tourId')?.value;
+  const tourDate = document.getElementById('tourDate')?.value;
+  const reviewId = document.getElementById('reviewId')?.value;
   let review = document.getElementById('review').value;
   if (!review) {
     showAlert('error', 'Please say a few words about your experience');
@@ -50,5 +62,9 @@ document.querySelector('.form').addEventListener('submit', (e) => {
   const rating = selectedRating.value;
   submitButton.disabled = true;
   submitButton.textContent = 'Submitting...';
-  addReview(review, rating, tour, tourDate, submitButton);
+  if (reviewId) {
+    addReview(review, rating, tour, tourDate, submitButton, reviewId);
+  } else {
+    addReview(review, rating, tour, tourDate, submitButton);
+  }
 });
