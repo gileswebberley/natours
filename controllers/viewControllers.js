@@ -57,10 +57,10 @@ export const getMyBookings = async (req, res) => {
       // console.log('Finding review', tour);
       //safety catch for older reviews without the tourDate just to fudge backward compatibility
       if (r.tour.id !== tour.id) return false;
-      console.log('is user review');
+      // console.log('is user review');
       //there is a review for this tour but it might be an old one
       if (!r.tourDate) return true;
-      console.log('has review date');
+      // console.log('has review date');
       //finally check to see if a new review is for this tour date
       return (
         new Date(r.tourDate).getTime() ===
@@ -179,7 +179,7 @@ export const addReview = async (req, res) => {
 
 export const editReview = async (req, res) => {
   const review = await Review.findById(req.params.reviewId);
-  console.log(review);
+  // console.log(review);
   res.status(200).render('editReview', {
     title: `Review for ${review.tour.name}`,
     review,

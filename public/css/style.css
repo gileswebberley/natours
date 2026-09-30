@@ -1561,6 +1561,12 @@ body {
 .form__group:not(:last-child) {
   margin-bottom: 2.5rem;
 }
+.form__buttons {
+  display: flex;
+  width: 100%;
+  align-items: flex-start;
+  gap: 1rem;
+}
 /* for implementing a show/hide toggle on password inputs */
 .input-container {
   position: relative; /* The anchor point for the button */
