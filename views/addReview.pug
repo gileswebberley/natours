@@ -1,7 +1,7 @@
 extends base
 
 block append head
-    script(type='module' src='/js/signup.js' defer)
+    script(type='module' src='/js/addReview.js')
 
 block content
     main.main
@@ -12,8 +12,8 @@ block content
                 input#tourId(type='hidden' value=`${tour.id}`)
                 input#tourDate(type='hidden' value=`${date}`)
                 .form__group
-                    label.form__label(for='review') Review
-                    textarea#review.form__input(type='text', rows='5', placeholder='Your thoughts...', required, autofocus)
+                    label.form__label(for='review') Your Review
+                    textarea#review.form__input(type='text', rows='5', placeholder='Please write a few words...', required, autofocus)
                 .form__group
                     .add-review__rating
                         //-do it in reverse so that the previous stars can be highlighted

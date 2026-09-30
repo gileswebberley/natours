@@ -1,24 +1,24 @@
 import axios from '/js/axios.js';
 import { showAlert } from './alerts.js';
-// first time using axios to make use of the backend we wrote
-async function signup(name, email, password, passwordConfirm, btnEl) {
+
+async function addReview(review, rating, tour, tourDate, btnEl) {
   const resetButton = () => {
     btnEl.disabled = false;
-    btnEl.textContent = 'Sign Up';
+    btnEl.textContent = 'Submit';
   };
   try {
-    const res = await axios.post('/api/v1/users/signup', {
-      name,
-      email,
-      password,
-      passwordConfirm,
+    const res = await axios.post('/api/v1/reviews/', {
+      review,
+      rating,
+      tour,
+      tourDate,
     });
     // console.log(res);
-    showAlert('success', 'You have successfully signed up', 1800);
+    showAlert('success', `Thank you for your ${rating} star review`, 1800);
     //wait for a moment and then redirect to the home page
     window.setTimeout(() => {
       resetButton();
-      window.location.replace('/');
+      window.location.replace('/my-reviews');
     }, 2000);
   } catch (err) {
     // console.log(err.response);
@@ -34,11 +34,21 @@ document.querySelector('.form').addEventListener('submit', (e) => {
   e.preventDefault();
   // console.log('Sign up clicked...');
   const submitButton = e.submitter;
-  const name = document.getElementById('name').value;
-  const email = document.getElementById('email').value;
-  const password = document.getElementById('password').value;
-  const passwordConfirm = document.getElementById('passwordConfirm').value;
+  const tour = document.getElementById('tourId').value;
+  const tourDate = document.getElementById('tourDate').value;
+  let review = document.getElementById('review').value;
+  if (!review) {
+    showAlert('error', 'Please say a few words about your experience');
+    return;
+  }
+  const selectedRating = document.querySelector('input[name="rating"]:checked');
+  //a bit of validation to make sure a rating has been provided
+  if (!selectedRating) {
+    showAlert('error', 'Please give us a star rating');
+    return;
+  }
+  const rating = selectedRating.value;
   submitButton.disabled = true;
   submitButton.textContent = 'Submitting...';
-  signup(name, email, password, passwordConfirm, submitButton);
+  addReview(review, rating, tour, tourDate, submitButton);
 });

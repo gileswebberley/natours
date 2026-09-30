@@ -62,13 +62,18 @@ body {
   background-color: #f7f7f7;
   /* top-bottom left-right */
   padding: clamp(3rem, 4dvh, 7rem) clamp(1rem, 3vw, 6rem);
-  /* -webkit-box-flex: 1;
-  -ms-flex: 1; */
   flex: 1;
   position: relative;
   /* display: flex;
   flex-direction: column; */
 }
+
+/* put an asterisk next to any required form field label */
+/* label:has(~ input[required])::after {
+  content: ' *';
+  color: #1bac4c;
+  font-weight: 700;
+} */
 
 .flex {
   display: -webkit-box;
