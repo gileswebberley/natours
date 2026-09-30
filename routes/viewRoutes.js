@@ -1,6 +1,7 @@
 import express from 'express';
 import {
   addReview,
+  editReview,
   getLoginForm,
   getMe,
   getMyBookings,
@@ -21,6 +22,7 @@ router.get('/me', protect, getMe);
 router.get('/my-tours', protect, getMyBookings);
 router.get('/my-reviews', protect, getMyReviews);
 router.get('/add-review/:tourId/:tourDate', protect, addReview);
+router.get('/edit-review/:reviewId', protect, editReview);
 // this is not protecting routes but simply there for conditional rendering of the navigation
 router.use(isLoggedIn);
 // when returning to the overview page after going to the payment page we want to create the booking that has been paid for, otherwise the createBookingCheckout will simply return next()

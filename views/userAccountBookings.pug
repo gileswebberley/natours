@@ -61,7 +61,10 @@ block subContent
                             - const hasBeen = today > tourDate
                             .card__buttons
                                 if hasBeen
-                                    a.btn.btn--green.btn--small(href=`/add-review/${tour.id}/${tour.startDates[0]}`) Add Review
+                                    if tour.userReview
+                                        a.btn.btn--green.btn--small(href=`/edit-review/${tour.userReview.id}`) Edit Review
+                                    else
+                                        a.btn.btn--green.btn--small(href=`/add-review/${tour.id}/${tour.startDates[0]}`) Add Review
                                 a.btn.btn--green.btn--small(href=`/tour/${tour.slug}`) Details
 
 

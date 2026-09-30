@@ -39,18 +39,35 @@ export const getMyBookings = async (req, res) => {
   const bookings = await Booking.find({ user: req.user.id }).populate({
     path: 'tourDetails',
   });
+  //we'll get the user's reviews so they can edit rather than add a review from the booking card
+  const tourIds = bookings.map((b) => b.tourDetails?.id).filter(Boolean); //the filter just incase there's no tourDetails
+  const userReviews = await Review.find({
+    user: req.user.id,
+    tour: { $in: tourIds },
+  });
+  // console.log(userReviews);
   const tourDetails = bookings.map((booking) => {
     // added the justOne: true to the virtual property to avoid these being inside a single object array
     //make a clone so that I can add the paid and bookingRef properties
     const tour = structuredClone(booking.tourDetails.toObject());
     // set the only start date to the date that the tour has been booked for
-    // booking.tourDetails.startDates = [booking.tourStartDate];
-    // //add in the stripe payment id as a booking reference
-    // booking.tourDetails.bookingRef =
-    //   booking.stripeSessionId || 'No ref available';
-    // booking.tourDetails.paid = booking.paid;
-    // set the only start date to the date that the tour has been booked for
     tour.startDates = [booking.tourStartDate];
+    //check if there's a review for this booking
+    const bookingReview = userReviews.find((r) => {
+      // console.log('Finding review', tour);
+      //safety catch for older reviews without the tourDate just to fudge backward compatibility
+      if (r.tour.id !== tour.id) return false;
+      console.log('is user review');
+      //there is a review for this tour but it might be an old one
+      if (!r.tourDate) return true;
+      console.log('has review date');
+      //finally check to see if a new review is for this tour date
+      return (
+        new Date(r.tourDate).getTime() ===
+        new Date(tour.startDates[0]).getTime()
+      );
+    });
+    tour.userReview = bookingReview || null;
     //add in the stripe payment id as a booking reference
     tour.bookingRef = booking.stripeSessionId || 'No ref available';
     tour.paid = booking.paid;
@@ -157,5 +174,14 @@ export const addReview = async (req, res) => {
     title: `Review for ${tour.name}`,
     tour,
     date,
+  });
+};
+
+export const editReview = async (req, res) => {
+  const review = await Review.findById(req.params.reviewId);
+  console.log(review);
+  res.status(200).render('addReview', {
+    title: `Review for ${review.tour.name}`,
+    review,
   });
 };

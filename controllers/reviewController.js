@@ -64,6 +64,7 @@ export const markReviewAsInappropriate = async (req, res) => {
     review,
   });
 };
+
 //this is running through the protect middleware in authController and so we have the user object on the req object
 export const createReview = async (req, res) => {
   //we are going to allow this to work with a nested route, seeing as this relates to a tour and we don't want the user to have to add the tour id manually to the req.body we'll check if it has been supplied and if not we'll assume it is in the params
