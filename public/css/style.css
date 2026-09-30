@@ -710,11 +710,40 @@ body {
   display: -ms-flexbox;
   display: flex;
 }
+/* to have the stars selectable when leaving a rating (using hidden radio buttons) */
+.add-review__rating {
+  margin-top: auto;
+  display: flex;
+  flex-direction: row-reverse;
+}
+.add-review__rating input[type='radio'] {
+  /* hide the underlying form input */
+  display: none;
+}
+/* we're using the labels to visually represent the radio buttons with a star icon */
+.add-review__rating label {
+  cursor: pointer;
+}
+
 .reviews__star {
   height: 2rem;
   width: 2rem;
   margin-right: 1px;
+  /* without --active/--inactive we'll set them to be inactive colour */
+  fill: #bbb;
+  /* when using this class for selecting a rating we'll add a little transition */
+  transition:
+    fill 0.2s ease,
+    transform 0.1s ease;
 }
+
+/* This matches the selected star AND all preceding stars */
+.add-review__rating input[type='radio']:checked ~ label .reviews__star,
+.add-review__rating label:hover ~ label .reviews__star,
+.add-review__rating label:hover .reviews__star {
+  fill: #1bac4c;
+}
+
 .reviews__star--active {
   fill: #55c57a;
 }

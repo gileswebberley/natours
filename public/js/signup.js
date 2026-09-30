@@ -31,7 +31,7 @@ async function signup(name, email, password, passwordConfirm, btnEl) {
 // by adding this script to the head of the login page with type='module' it waits for the form to render and then grabs all of this info
 document.querySelector('.form').addEventListener('submit', (e) => {
   e.preventDefault();
-  console.log('Sign up clicked...');
+  // console.log('Sign up clicked...');
   const submitButton = e.submitter;
   const name = document.getElementById('name').value;
   const email = document.getElementById('email').value;

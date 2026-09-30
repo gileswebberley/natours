@@ -1,0 +1,26 @@
+extends base
+
+block append head
+    script(type='module' src='/js/signup.js' defer)
+
+block content
+    main.main
+        .login-form
+            h2.heading-secondary.ma-bt-sm Tell us your thoughts
+            h2.ma-bt-lg=`What did you think of ${tour.name} Tour that you took on ${new Date(date).toLocaleString('en-us', {day: 'numeric', month: 'long', year: 'numeric'})}`
+            form.form
+                input#tourId(type='hidden' value=`${tour.id}`)
+                input#tourDate(type='hidden' value=`${date}`)
+                .form__group
+                    label.form__label(for='review') Review
+                    textarea#review.form__input(type='text', rows='5', placeholder='Your thoughts...', required, autofocus)
+                .form__group
+                    .add-review__rating
+                        //-do it in reverse so that the previous stars can be highlighted
+                        each star in [5,4,3,2,1]
+                            input(type='radio', id=`star${star}`, name='rating', value=`${star}`)
+                            label(for=`star${star}`)
+                                svg.reviews__star(class='reviews__star')
+                                    use(xlink:href='/img/icons.svg#icon-star')
+                .form__group
+                    button.btn.btn--green Submit

@@ -147,3 +147,15 @@ export const getMe = (req, res) => {
     title: 'User Account',
   });
 };
+
+export const addReview = async (req, res) => {
+  const tour = await Tour.findById(req.params.tourId).select('id name');
+  // console.log(tour);
+  const date = req.params.tourDate;
+  // console.log(date);
+  res.status(200).render('addReview', {
+    title: `Review for ${tour.name}`,
+    tour,
+    date,
+  });
+};
