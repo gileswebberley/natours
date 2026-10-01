@@ -10,6 +10,7 @@
   },
   "main": "app.js",
   "scripts": {
+    "start": "node server.js",
     "production": "node --env-file=.env.production server.js",
     "dev": "node --watch --env-file=.env.development server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
