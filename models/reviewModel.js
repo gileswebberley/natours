@@ -88,7 +88,7 @@ reviewSchema.statics.calcRatingsAverage = async function (tourId) {
       },
     },
   ]);
-  console.log(stats);
+  // console.log(stats);
   //now let's put these stats into the tour document being careful that we have not deleted the last review that exists by using optional chaining and nullish coalescence
   await Tour.findByIdAndUpdate(tourId, {
     ratingsAverage: stats[0]?.avgRating ?? 4.5,

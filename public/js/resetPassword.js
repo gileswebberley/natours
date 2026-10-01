@@ -21,7 +21,7 @@ async function resetPassword(password, passwordConfirm, token) {
 
 document.querySelector('.form').addEventListener('submit', (e) => {
   e.preventDefault();
-  console.log('reset password called');
+  // console.log('reset password called');
   const password = document.getElementById('password').value;
   const passwordConfirm = document.getElementById('confirmPassword').value;
   const token = document.getElementById('token').value;

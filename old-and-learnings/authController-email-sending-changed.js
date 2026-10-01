@@ -339,7 +339,7 @@ export const resetPassword = async (req, res) => {
   user.set('passwordResetToken', undefined, { strict: false });
   user.set('passwordResetExpires', undefined, { strict: false });
   //now save so that it goes through the validation and pre-save hook
-  console.log('Reset password is saving');
+  // console.log('Reset password is saving');
   await user.save();
 
   createAndSendToken(user, 200, res);

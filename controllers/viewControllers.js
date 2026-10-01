@@ -35,45 +35,50 @@ export const getMyReviews = async (req, res) => {
 
 //try the alternative virtual thing so we can have the booking info with the tours too I think...
 export const getMyBookings = async (req, res) => {
-  //adding the lean() method so I can add properties to the tourDetails (without it is a mongoose document so it matches the model whereas this makes it into a pure JS object with deep cloning)
+  //populate each booking with it's tour via the Booking model virtual property called tourDetails
+  // added the justOne: true to the virtual property to avoid these being inside a single object array
   const bookings = await Booking.find({ user: req.user.id }).populate({
     path: 'tourDetails',
   });
-  //we'll get the user's reviews so they can edit rather than add a review from the booking card
-  const tourIds = bookings.map((b) => b.tourDetails?.id).filter(Boolean); //the filter just incase there's no tourDetails
+  //we'll get the user's reviews so they can edit rather than add a review from the booking card (ie only one review per tour, unless it's the same tour but on different dates - see the bookingReviews logic)
+  const tourIds = bookings.map((b) => b.tourDetails?.id).filter(Boolean); //the filter just incase there's no tourDetails although a booking cannot exist without a tour (I guess the tour could be deleted??)
   const userReviews = await Review.find({
     user: req.user.id,
     tour: { $in: tourIds },
   });
   // console.log(userReviews);
-  const tourDetails = bookings.map((booking) => {
-    // added the justOne: true to the virtual property to avoid these being inside a single object array
-    //make a clone so that I can add the paid and bookingRef properties
-    const tour = structuredClone(booking.tourDetails.toObject());
-    // set the only start date to the date that the tour has been booked for
-    tour.startDates = [booking.tourStartDate];
-    //check if there's a review for this booking
-    const bookingReview = userReviews.find((r) => {
-      // console.log('Finding review', tour);
-      //safety catch for older reviews without the tourDate just to fudge backward compatibility
-      if (r.tour.id !== tour.id) return false;
-      // console.log('is user review');
-      //there is a review for this tour but it might be an old one
-      if (!r.tourDate) return true;
-      // console.log('has review date');
-      //finally check to see if a new review is for this tour date
-      return (
-        new Date(r.tourDate).getTime() ===
-        new Date(tour.startDates[0]).getTime()
-      );
-    });
-    tour.userReview = bookingReview || null;
-    //add in the stripe payment id as a booking reference
-    tour.bookingRef = booking.stripeSessionId || 'No ref available';
-    tour.paid = booking.paid;
-    tour.attendees = booking.attendees;
-    return tour;
-  });
+  const tourDetails = bookings
+    .map((booking) => {
+      //incase a tour has been deleted we'll simply not provide that booking
+      if (!booking.tourDetails) return null; //this is why we have filter(Boolean) chained onto this map()
+
+      //make a clone so that I can add the paid and bookingRef properties
+      const tour = structuredClone(booking.tourDetails.toObject());
+      // set the only start date to the date that the tour has been booked for
+      tour.startDates = [booking.tourStartDate];
+      //check if there's a review for this booking
+      const bookingReview = userReviews.find((r) => {
+        // console.log('Finding review', tour);
+        //safety catch for older reviews without the tourDate just to fudge backward compatibility
+        if (r.tour.id !== tour.id) return false;
+        // console.log('is user review');
+        //there is a review for this tour but it might be an old one
+        if (!r.tourDate) return true;
+        // console.log('has review date');
+        //finally check to see if a new review is for this tour date
+        return (
+          new Date(r.tourDate).getTime() ===
+          new Date(tour.startDates[0]).getTime()
+        );
+      });
+      tour.userReview = bookingReview || null;
+      //add in the stripe payment id as a booking reference
+      tour.bookingRef = booking.stripeSessionId || 'No ref available';
+      tour.paid = booking.paid;
+      tour.attendees = booking.attendees;
+      return tour;
+    })
+    .filter(Boolean);
   // console.log(tourDetails);
   res.status(200).render('userAccountBookings', {
     title: 'Your Tours',

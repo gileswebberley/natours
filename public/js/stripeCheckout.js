@@ -36,7 +36,7 @@ if (form)
     const { tourId } = e.submitter.dataset; //remember tour-id as a data-attribute is converted to camelCase in the dataset object
     const formData = new FormData(form);
     const formValues = Object.fromEntries(formData);
-    console.log(formValues);
+    // console.log(formValues);
     //we'll pass the event in so it can be used to un-disable the button and change the text back in case of an error or the such
     await bookTour(tourId, e.submitter, formValues);
     // e.target.textContent = 'Book tour now';
