@@ -13,9 +13,16 @@ export const getCheckoutSession = async (req, res) => {
   }
   const { date, attendees } = req.body;
   // 2) Create checkout session
-  // for testing we need to use live images for the products which we'll grab from Jonas' live demo site, however when we deploy we can swap to the ones in the public folder of our own site. To make this simple let's define the two paths here and then we can swap them out when we deploy
-  const productionImagePath = `${req.protocol}://${req.get('host')}/img/tours/${tour.imageCover}`;
+  // for testing we need to use live images for the products which we'll grab from Jonas' live demo site, however when we deploy we can swap to the ones in the public folder of our own site. To make this simple let's define the two paths here and then we can swap them out when we deploy - OH NO, what if an image is on cloudinary then we would want a different production url!?? Let's just use the imageCoverUrl virtual property to find out...
+  const productionImagePath = tour.imageCoverUrl.startsWith('http')
+    ? tour.imageCoverUrl
+    : `${req.protocol}://${req.get('host')}${tour.imageCoverUrl}`;
   const devImagePath = `https://www.natours.dev/img/tours/${tour.imageCover}`;
+
+  let imagePath = devImagePath;
+  if (process.env.NODE_ENV === 'production') {
+    imagePath = productionImagePath;
+  }
 
   //let's add in the all important date of the tour that's being booked as it's not included in the course and is a very important piece of information for the user to see in their Stripe checkout. We'll add it to the product description field as this is displayed in the checkout and is a good place for it. We'll also add the tour date to the product name, and to the booking model, so that it's clear which date they are booking. We'll just have it be the next available date or the first date in the startDates array for now.
   // const today = new Date();
@@ -63,7 +70,7 @@ export const getCheckoutSession = async (req, res) => {
           product_data: {
             name: `${tour.name} Tour`,
             description: `${tour.summary} - Starting: ${tourDateString}`,
-            images: [devImagePath],
+            images: [imagePath],
           },
         },
         quantity: parseInt(attendees),
