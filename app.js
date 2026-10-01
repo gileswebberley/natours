@@ -16,6 +16,7 @@ import sanitizer from 'perfect-express-sanitizer';
 // import xss from 'xss-clean';
 import cookieParser from 'cookie-parser';
 import hpp from 'hpp';
+import protectedPaths from './public/js/protectedPaths.js';
 //remember these are properties of the node.js wrapper function when using commonJS modules (ie require()) so we do not have access to them when we are using ES modules (import/export) so we have to create our own
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -143,6 +144,8 @@ app.use((req, res, next) => {
 //so I can hide buttons when we're on their page, eg /login should not have a login button
 app.use((req, res, next) => {
   res.locals.currentPath = req.path;
+  //this is an array of paths used by the navigation and by logout
+  res.locals.protectedPaths = protectedPaths;
   next();
 });
 

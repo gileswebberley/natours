@@ -20,7 +20,7 @@ async function bookTour(tourId, buttonElement, formValues) {
     }
   } catch (error) {
     const message =
-      err.response?.data?.message || 'Something unexpected went wrong';
+      error.response?.data?.message || 'Something unexpected went wrong';
     showAlert('error', message);
     buttonElement.textContent = 'Book Tour Now';
     buttonElement.disabled = false;
@@ -28,15 +28,16 @@ async function bookTour(tourId, buttonElement, formValues) {
 }
 
 const form = document.querySelector('#booking-form');
-form.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  e.submitter.textContent = 'Processing...';
-  e.submitter.disabled = true;
-  const { tourId } = e.submitter.dataset; //remember tour-id as a data-attribute is converted to camelCase in the dataset object
-  const formData = new FormData(form);
-  const formValues = Object.fromEntries(formData);
-  console.log(formValues);
-  //we'll pass the event in so it can be used to un-disable the button and change the text back in case of an error or the such
-  await bookTour(tourId, e.submitter, formValues);
-  // e.target.textContent = 'Book tour now';
-});
+if (form)
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    e.submitter.textContent = 'Processing...';
+    e.submitter.disabled = true;
+    const { tourId } = e.submitter.dataset; //remember tour-id as a data-attribute is converted to camelCase in the dataset object
+    const formData = new FormData(form);
+    const formValues = Object.fromEntries(formData);
+    console.log(formValues);
+    //we'll pass the event in so it can be used to un-disable the button and change the text back in case of an error or the such
+    await bookTour(tourId, e.submitter, formValues);
+    // e.target.textContent = 'Book tour now';
+  });

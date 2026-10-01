@@ -16,10 +16,8 @@ block content
                     label.form__label(for='email') Email address
                     input#email.form__input(type='email', placeholder='you@example.com', required, autocomplete='email', autofocus)
                 .form__group.ma-bt-md
-                    //-     label.form__label(for='password') Password
-                    //-     input#password.form__input(type='password', placeholder='••••••••', required, autocomplete='current-password', minlength='8')
                     +passwordInput('password', 'password', 'Password')(class='form__input ma-bt-md' placeholder='••••••••' autocomplete='current-password' minlength='8')
-                .form__group
-                    button.btn.btn--green.ma-bt-md Login
-            .form__group
-                button#forgot-pword.btn Forgot Password
+                .form__buttons
+                    button.btn.btn--green.ma-bt-md(type='submit') Login
+                    button#forgot-pword.btn.btn--small(type='button') Forgot Password
+            //- .form__group

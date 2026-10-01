@@ -343,24 +343,19 @@ body {
   background-color: #444;
   padding: 1.5rem;
   height: fit-content;
-  position: relative;
-  z-index: 100;
-  display: -webkit-box;
-  display: -ms-flexbox;
+  position: sticky;
+  top: 0;
+  left: 0;
+  z-index: 1002;
   display: flex;
-  -webkit-box-pack: justify;
-  -ms-flex-pack: justify;
   justify-content: space-between;
-  -webkit-box-align: center;
-  -ms-flex-align: center;
   align-items: center;
 }
 @media only screen and (max-width: 520px) {
   .header {
-    -webkit-box-orient: vertical;
-    -webkit-box-direction: normal;
-    -ms-flex-direction: column;
     flex-direction: column;
+    position: relative;
+    /* z-index: 100; */
   }
   .header__logo {
     -webkit-box-ordinal-group: 0;
@@ -580,7 +575,7 @@ body {
   );
   margin-top: calc(0px - var(--section-rotate));
   position: relative;
-  z-index: 1000;
+  z-index: 999;
 }
 
 .picture-box__img {
@@ -632,7 +627,7 @@ body {
   margin-top: calc(0px - var(--section-rotate));
   padding: calc(5rem + var(--section-rotate)) 0;
   position: relative;
-  z-index: 1000;
+  z-index: 1001;
   background: -webkit-gradient(
     linear,
     left top,

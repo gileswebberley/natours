@@ -1,5 +1,6 @@
 import axios from '/js/axios.js';
 import { showAlert } from './alerts.js';
+import protectedPaths from './protectedPaths.js';
 
 const logoutBtn = document.querySelector('.nav__el--logout');
 if (logoutBtn) {
@@ -9,15 +10,13 @@ if (logoutBtn) {
   });
 }
 
-const protectedPaths = ['/me'];
-
 const logout = async () => {
   try {
     const res = await axios.post('/api/v1/users/logout', {});
     showAlert('success', 'You have successfully logged out', 1800);
     //wait for a moment and then reload to update the header
     window.setTimeout(() => {
-      if (protectedPaths.includes(window.location.pathname)) {
+      if (protectedPaths.includes(window.location.pathname.split('/')[1])) {
         //we're in a protected route so go to home on logout
         window.location.replace('/');
       } else {
