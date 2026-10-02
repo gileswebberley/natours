@@ -14,7 +14,7 @@ async function signup(name, email, password, passwordConfirm, btnEl) {
       passwordConfirm,
     });
     // console.log(res);
-    showAlert('success', 'You have successfully signed up', 1800);
+    showAlert('success', `Welcome to Natours ${name}`, 1800);
     //wait for a moment and then redirect to the home page
     window.setTimeout(() => {
       resetButton();

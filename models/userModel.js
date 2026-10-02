@@ -92,7 +92,7 @@ const userSchema = new mongoose.Schema(
 //we'll create a virtual property that will take care of images stored on cloudinary vs images stored locally. This can then be used by our pug templates to display the user image correctly
 userSchema.virtual('photoUrl').get(function () {
   //if it's a cloudinary link then use that directly, otherwise use the local path to the image
-  if (this.photo && this.photo.startsWith('http')) {
+  if (this.photo && this.photo?.startsWith('http')) {
     return this.photo;
   }
   return `/img/users/${this.photo}`;

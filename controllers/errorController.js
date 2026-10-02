@@ -42,11 +42,25 @@ Mongoose (and standard JavaScript Error objects) typically define properties lik
     //check to see if it's an error thrown by multer while trying to upload files
     if (error instanceof multer.MulterError) error = handleMulterErrors(error);
     // add in the possible Stripe errors
-    if (error.type.startsWith('Stripe')) error = handleStripeErrors(error);
-
+    if (error.type?.startsWith('Stripe')) error = handleStripeErrors(error);
+    //finally errors from using Brevo email
+    if (
+      error.code &&
+      (error.code === 'EAUTH' ||
+        error.code === 'EENVELOPE' ||
+        error.host === '://brevo.com')
+    )
+      error = handleEmailErrors(error);
     sendErrorProd(error, req, res);
   }
 };
+
+function handleEmailErrors(err) {
+  return new AppError(
+    `Our email system has encountered a problem: ${err.message}`,
+    500,
+  );
+}
 
 function handleStripeErrors(err) {
   if (err.type === 'StripeCardError') {
