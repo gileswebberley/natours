@@ -137,3 +137,27 @@ export class CustomEmail extends Email {
     await this.send(subject, html);
   }
 }
+
+//the original simple email sending function that was used before we crated a class (or two!)
+export const sendEmail = async (options) => {
+  const transport = nodemailer.createTransport({
+    host: process.env.MAILTRAP_HOST,
+    port: process.env.MAILTRAP_PORT,
+    auth: {
+      user: process.env.MAILTRAP_USER,
+      pass: process.env.MAILTRAP_PW,
+    },
+  });
+  //define the email options
+  const mailOptions = {
+    from: process.env.MAILTRAP_FROM,
+    to: options.email,
+    subject: options.subject,
+    text: options.message,
+    //clever trick using the spread operator to dynamically add html if it exists in the options object, it's based on the fact that the spread operator will quietly fail if trying to spread false
+    ...(options.html && { html: options.html }),
+    // html: options.html || '',
+  };
+  //if you don't add a callback function as the second argument then it returns a promise, async is good for node remember
+  const info = await transport.sendMail(mailOptions);
+};
