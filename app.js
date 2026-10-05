@@ -16,6 +16,8 @@ import sanitizer from 'perfect-express-sanitizer';
 // import xss from 'xss-clean';
 import cookieParser from 'cookie-parser';
 import hpp from 'hpp';
+//if we want to use the api routes from a seperate front end (ie if we built a react site that used the api) then we need to npm i cors and then add this middleware. I'll pop it in here for now but I'll comment out the use of it for now as we do not need it for the pug template method we are using as it sits at the same origin as the api. If we want to allow it for a new front-end then we would simply set the origin to the url of that front-end site - DO NOT LEAVE IT UNCONFIGURED AS IT WILL OPEN THE API TO THE WORLD AND CAN BE USED TO ATTACK THE SITE!!
+import cors from 'cors';
 import protectedPaths from './public/js/protectedPaths.js';
 //remember these are properties of the node.js wrapper function when using commonJS modules (ie require()) so we do not have access to them when we are using ES modules (import/export) so we have to create our own
 const __filename = fileURLToPath(import.meta.url);
@@ -28,6 +30,16 @@ app.set('view engine', 'pug');
 //this path.join method saves us from having to worry about how the paths are formed
 app.set('views', path.join(__dirname, 'views'));
 //I have spent a long time making the security features taught in the course work with Express 5 and we should be good now. REMEMBER to treat the req.query object as immutable in the rest of your controllers though as that is the expected behaviour in Express 5 (see the alias route in the tourControllers file for an example of this)
+
+//if allowing cors...
+// const corsOptions = {
+//   // Replace this with your actual frontend URL
+//   origin: 'https://onrender.com',
+//   credentials: true, // Crucial for allowing cookies to be sent back and forth
+//   optionsSuccessStatus: 200,
+// };
+
+// app.use(cors(corsOptions));
 
 // for parsing queries with for example duration[gte]=5 we need to set the extended option to true, unlike in the course where it worked out of the box
 app.set('query parser', 'extended');
