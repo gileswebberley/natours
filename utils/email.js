@@ -69,8 +69,13 @@ export class Email {
       text,
       html,
     };
+    try {
+      //we don't want this to make everything crash so if an error occurs let's simply log it to our console
+      await this.newTransport().sendMail(mailOptions);
+    } catch (error) {
+      console.error('Email sending failed: ', error);
+    }
     //create transport and send email
-    await this.newTransport().sendMail(mailOptions);
   }
 
   //refactor - I have ended up with virtually the same function redefined in the CustomEmail subclass so instead we'll just make this one more flexible
