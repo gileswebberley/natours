@@ -1559,7 +1559,9 @@ body {
 .form__buttons {
   display: flex;
   width: 100%;
-  align-items: flex-start;
+  align-items: center;
+  flex-wrap: wrap;
+  /* justify-content: flex-start; */
   gap: 1rem;
 }
 /* for implementing a show/hide toggle on password inputs */
