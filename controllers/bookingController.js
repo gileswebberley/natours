@@ -49,14 +49,14 @@ export const getCheckoutSession = async (req, res) => {
     // before you would define payment_method_types as an array of strings, such as ['card'], but now it is recommended to leave this out and let stripe handle it with their 'dynamic payment methods' feature. This automatically offers the best payment methods based on customer location and so on whilst also allowing googlePay etc to be used if set up on their device. This is a new feature that was not possible when the ancient course was made in 2019.
     mode: 'payment',
     //in the course they added the tour and user ids as url params but instead we can use the metadata field and pass the session id instead which we can then retrieve and use to create the booking.
-    success_url: `${req.protocol}://${req.get('host')}/?session_id={CHECKOUT_SESSION_ID}`, //homepage for now
+    success_url: `${req.protocol}://${req.get('host')}/?session_id={CHECKOUT_SESSION_ID}`, //homepage for now, this will change when we use webhooks on a deployed site
     cancel_url: `${req.protocol}://${req.get('host')}/tour/${tour.slug}`, //back to the tour they were about to book
     customer_email: req.user.email, //this simply fills the email field in the Stripe checkout
     // client_reference_id: req.params.tourId, //OUTDATED - this is a custom field that we can use to store the tour ID for later use however it is not secure and is used in the course as a bit of a hack. There is now a metadata field that can be used for this purpose instead as it is returned in the webhook checkout.session.completed event and is more secure.
     metadata: {
       tourId: tour.id,
       price: tour.price,
-      attendees,
+      attendees: String(attendees), //we need to convert this to a string as the metadata field only accepts strings and not numbers
       tourStartDate: tourDateISO,
       userId: req.user.id,
     },
@@ -66,14 +66,14 @@ export const getCheckoutSession = async (req, res) => {
         //unlike in the course you no longer put product name and price etc directly into the line_item but instead use the price_data object and include the product_data object within that
         price_data: {
           currency: 'gbp',
-          unit_amount: tour.price * 100, //remember that Stripe uses the smallest currency amount (eg pence in pounds)
+          unit_amount: Math.round(tour.price * 100), //remember that Stripe uses the smallest currency amount (eg pence in pounds)
           product_data: {
             name: `${tour.name} Tour`,
             description: `${tour.summary} - Starting: ${tourDateString}`,
             images: [imagePath],
           },
         },
-        quantity: parseInt(attendees),
+        quantity: parseInt(attendees, 10),
       },
     ],
   });
