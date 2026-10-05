@@ -83,6 +83,8 @@ app.use(
   }),
 );
 
+//when using stripe webhooks make sure the route sits above express.json() and sanitizer.clean() as it needs the raw body to verify the signature. Place your route here - app.post('webhook-checkout',express.raw({ type: 'application/json' }), webhookCheckout);
+
 // make axios available as ES Modules at /js/axios.js
 app.use(
   '/js/axios.js',

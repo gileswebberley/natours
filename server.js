@@ -55,5 +55,15 @@ process.on('unhandledRejection', (err) => {
   }
 });
 
+//when deployed on the free hosting especially Render, the app will be put to sleep after a period of inactivity and then when it is woken up it will throw an error about the database connection being closed. This is because the database connection is closed when the app is put to sleep and then when it is woken up the connection is no longer valid. To fix this we can listen for the SIGTERM signal which is sent when the app is being shut down and then close the server gracefully. This will allow the app to be restarted without throwing an error about the database connection being closed.
+process.on('SIGTERM', () => {
+  console.log('SIGTERM RECEIVED: Shutting down gracefully');
+  if (server) {
+    server.close(() => {
+      console.log('Process terminated!');
+    });
+  }
+});
+
 //Now we've got our exception and rejection handlers there for the whole application, including in app.js, we'll try to dynamically import it and do all of the start up routine
 startServer();

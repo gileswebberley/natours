@@ -33,6 +33,7 @@ const createAndSendToken = (user, statusCode, res) => {
   //we'll now send a cookie with the token as well. All of these options must be the same in the logout cookie for modern browsers. The sameSite option should be 'lax' for a monolith structure that we have (ie no seperate front end built in React or some such) and 'none' if we want our api available to the seperate front-end. If set to none then secure must be true!!
   const cookieOptions = {
     expires: new Date(expiresTimestamp),
+    //The only reason people sometimes swap to req.secure (or a combined check like req.secure || req.get('x-forwarded-proto') === 'https') is if they want to test full HTTPS behavior on their local machine using a self-signed SSL certificate before pushing to the cloud.
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
     httpOnly: true,
