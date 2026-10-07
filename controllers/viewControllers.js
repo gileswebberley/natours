@@ -5,6 +5,15 @@ import AppError from '../utils/appError.js';
 import { getOne } from './handlerFactory.js';
 import { getTourById } from './tourController.js';
 
+//We want to show an alert when a booking has been successful and because we are now using the webhooks method we'll be redirected to the 'my-tours' page. We'll add a query string to the redirect url and check for it's existence here
+export const checkAlert = (req, res, next) => {
+  if (req.query.alert === 'booking') {
+    res.locals.alert =
+      "Your booking was successful - Please check your email for a confirmation. If your booking doesn't show up here immediately don't worry but please come back later to check";
+  }
+  next();
+};
+
 export const getOverview = async (req, res) => {
   const tours = await Tour.find();
   res.status(200).render('overview', {

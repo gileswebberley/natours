@@ -20,9 +20,9 @@ export const getCheckoutSession = async (req, res) => {
   const devImagePath = `https://www.natours.dev/img/tours/${tour.imageCover}`;
 
   let imagePath = devImagePath;
-  // if (process.env.NODE_ENV === 'production') {
-  //   imagePath = productionImagePath;
-  // }
+  if (process.env.NODE_ENV === 'production') {
+    imagePath = productionImagePath;
+  }
 
   //let's add in the all important date of the tour that's being booked as it's not included in the course and is a very important piece of information for the user to see in their Stripe checkout. We'll add it to the product description field as this is displayed in the checkout and is a good place for it. We'll also add the tour date to the product name, and to the booking model, so that it's clear which date they are booking. We'll just have it be the next available date or the first date in the startDates array for now.
   // const today = new Date();
@@ -49,7 +49,8 @@ export const getCheckoutSession = async (req, res) => {
     // before you would define payment_method_types as an array of strings, such as ['card'], but now it is recommended to leave this out and let stripe handle it with their 'dynamic payment methods' feature. This automatically offers the best payment methods based on customer location and so on whilst also allowing googlePay etc to be used if set up on their device. This is a new feature that was not possible when the ancient course was made in 2019.
     mode: 'payment',
     //in the course they added the tour and user ids as url params but instead we can use the metadata field and pass the session id instead which we can then retrieve and use to create the booking.
-    success_url: `${req.protocol}://${req.get('host')}/?session_id={CHECKOUT_SESSION_ID}`, //homepage for now, this will change when we use webhooks on a deployed site
+    // success_url: `${req.protocol}://${req.get('host')}/?session_id={CHECKOUT_SESSION_ID}`, //homepage for now, this will change when we use webhooks on a deployed site
+    success_url: `${req.protocol}://${req.get('host')}/my-tours?alert=booking`, //now we are implementing the webhook we can simply redirect to the my-tours page where, hopefully, the user can see this new booking
     cancel_url: `${req.protocol}://${req.get('host')}/tour/${tour.slug}`, //back to the tour they were about to book
     customer_email: req.user.email, //this simply fills the email field in the Stripe checkout
     // client_reference_id: req.params.tourId, //OUTDATED - this is a custom field that we can use to store the tour ID for later use however it is not secure and is used in the course as a bit of a hack. There is now a metadata field that can be used for this purpose instead as it is returned in the webhook checkout.session.completed event and is more secure.
@@ -84,8 +85,8 @@ export const getCheckoutSession = async (req, res) => {
   });
 };
 
+//this is a temporary solution to create a booking when the user comes back from the Stripe checkout. This is not secure as anyone can make a GET request to this endpoint and create a booking without paying. We will implement a proper solution using Stripe webhooks later.
 export const createBookingCheckout = async (req, res, next) => {
-  //this is a temporary solution to create a booking when the user comes back from the Stripe checkout. This is not secure as anyone can make a GET request to this endpoint and create a booking without paying. We will implement a proper solution using Stripe webhooks later.
   const sessionId = req.query.session_id;
   if (!sessionId) {
     //as this is part of the middleware chain for our overview page route we don't throw an error but simply pass it onto the next stage where it's just a page of tours rather than creating a booking on the way through
@@ -124,12 +125,60 @@ export const createBookingCheckout = async (req, res, next) => {
       stripeSessionId: sessionId,
     });
 
-    // const newBooking = await Booking.findOne({ user: userId });
-    // console.log(newBooking);
-
     return res.redirect(req.originalUrl.split('?')[0]); //redirect to the same url without the query string
   } catch (error) {
     // Global error handling middleware will deal with any Stripe errors
     return next(error);
   }
+};
+
+//Now we have a deployed site we can set up a webhook endpoint on the Stripe>Developers>Webhooks page. It is worth noting that I discovered that we could test this pre-deployment by using the Stripe CLI to forward events to our local machine. This is a bit of a pain to set up and requires a bit of fiddling with the command line but it is worth it as we can test the webhook before deploying. The Stripe CLI can be downloaded from https://stripe.com/docs/stripe-cli#install and then we can use the command stripe listen --forward-to localhost:3000/webhook-checkout to forward events to our local machine. We can then use the command stripe trigger checkout.session.completed to trigger a test event.
+export const webhookCheckout = async (req, res, next) => {
+  //the combination of this signature and the webhook secret that you get when setting up a webhook endpoint on Stripe is what keeps all of this interaction secure. REALLY IMPORTANT - the endpoint route is set up in app.js above the express.json() middleware as this system relies on receiving the raw body of the request (using express.raw())
+  const signature = req.headers['stripe-signature'];
+  //we'll construct the event in a try-catch block so we'll declare it here as a let variable to avoid scope issues
+  let event;
+  try {
+    event = stripe.webhooks.constructEvent(
+      req.body,
+      signature,
+      process.env.STRIPE_WEBHOOK_SECRET,
+    );
+  } catch (err) {
+    console.error('Error verifying webhook signature:', err);
+    return res.status(400).send(`Webhook Error: ${err.message}`);
+  }
+  //in the webhook setup we declare which events we will be listening for, here we will simply listen for the checkout.session.completed event which is fired when a checkout session has been successfully completed. We can then use the metadata that we passed through in the getCheckoutSession function to create a booking in our database.
+  if (event.type === 'checkout.session.completed') {
+    const session = event.data.object; // This IS the full session object!
+
+    // in our hack version we got this from req.query.session_id
+    const sessionId = session.id;
+
+    // Stop duplicate bookings from breaking the database
+    const existingBooking = await Booking.findOne({
+      stripeSessionId: sessionId,
+    });
+    if (existingBooking) {
+      console.error('Booking already exists for this Stripe session ID!!');
+      return res.status(200).json({ received: true });
+    }
+
+    // Extract your custom metadata keys directly from the payload
+    const { tourId, price, tourStartDate, userId, attendees } =
+      session.metadata;
+
+    //Create the secure booking document in MongoDB
+    await Booking.create({
+      tour: tourId,
+      user: userId,
+      price: Number(price),
+      tourStartDate,
+      attendees: Number(attendees),
+      stripeSessionId: sessionId,
+    });
+  }
+
+  // Always send a 200 acknowledgment status back to Stripe
+  res.status(200).json({ received: true });
 };

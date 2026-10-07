@@ -19,6 +19,8 @@ import hpp from 'hpp';
 //if we want to use the api routes from a seperate front end (ie if we built a react site that used the api) then we need to npm i cors and then add this middleware. I'll pop it in here for now but I'll comment out the use of it for now as we do not need it for the pug template method we are using as it sits at the same origin as the api. If we want to allow it for a new front-end then we would simply set the origin to the url of that front-end site - DO NOT LEAVE IT UNCONFIGURED AS IT WILL OPEN THE API TO THE WORLD AND CAN BE USED TO ATTACK THE SITE!!
 import cors from 'cors';
 import protectedPaths from './public/js/protectedPaths.js';
+// used for the Stripe webhooks
+import { webhookCheckout } from './controllers/bookingController.js';
 //remember these are properties of the node.js wrapper function when using commonJS modules (ie require()) so we do not have access to them when we are using ES modules (import/export) so we have to create our own
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -83,7 +85,12 @@ app.use(
   }),
 );
 
-//when using stripe webhooks make sure the route sits above express.json() and sanitizer.clean() as it needs the raw body to verify the signature. Place your route here - app.post('webhook-checkout',express.raw({ type: 'application/json' }), webhookCheckout);
+//when using stripe webhooks make sure the route sits above express.json() and sanitizer.clean() as it needs the raw body to verify the signature. Place your route here -
+app.post(
+  '/webhook-checkout',
+  express.raw({ type: 'application/json' }),
+  webhookCheckout,
+);
 
 // make axios available as ES Modules at /js/axios.js
 app.use(
